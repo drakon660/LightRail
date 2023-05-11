@@ -12,7 +12,7 @@ public sealed class Operation
         Name = name;
     }
 
-    public static Operation Create(string name) => new Operation(name);
+    public static Operation Create(string name) => new (name);
 
     public void SetSoapAction(string actionName)
     {

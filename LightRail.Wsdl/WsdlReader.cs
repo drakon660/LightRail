@@ -29,30 +29,28 @@ public class WsdlReader
             if (reader.NodeType == XmlNodeType.XmlDeclaration)
                 continue;
 
-            if (reader.NodeType == XmlNodeType.Element)
+            if (reader.NodeType != XmlNodeType.Element) continue;
+            var attributes = new Dictionary<string, string>();
+
+            if (reader.HasAttributes)
             {
-                var attributes = new Dictionary<string, string>();
+                while (reader.MoveToNextAttribute())
+                    attributes.Add(reader.Name, reader.Value);
 
-                if (reader.HasAttributes)
-                {
-                    while (reader.MoveToNextAttribute())
-                        attributes.Add(reader.Name, reader.Value);
+                // Move the reader back to the element
+                reader.MoveToElement();
+            }
 
-                    // Move the reader back to the element
-                    reader.MoveToElement();
-                }
+            var nodeElement = NodeElement.Create(reader.Name, reader.LocalName, attributes);
 
-                var nodeElement = NodeElement.Create(reader.Name, reader.LocalName, attributes);
-
-                if (Root != null)
-                {
-                    var currentTreeNode = TreeNode<NodeElement>.Create(nodeElement, reader.Depth);
-                    Root.AddChildAtLevel(currentTreeNode.Level, currentTreeNode);
-                }
-                else
-                {
-                    Root = TreeNode<NodeElement>.Create(nodeElement, reader.Depth);
-                }
+            if (Root != null)
+            {
+                var currentTreeNode = TreeNode<NodeElement>.Create(nodeElement, reader.Depth);
+                Root.AddChildAtLevel(currentTreeNode.Level, currentTreeNode);
+            }
+            else
+            {
+                Root = TreeNode<NodeElement>.Create(nodeElement, reader.Depth);
             }
         }
     }
@@ -101,7 +99,7 @@ public class WsdlReader
         foreach (var operationNode in node.Children)
         {
             var operationName = operationNode.Data.FindNameAttribute();
-            Operation operation = Operation.Create(operationName);
+            var operation = Operation.Create(operationName);
             foreach (var operationChild in operationNode.Children)
             {
                 var message = operationChild.Data.FindAttribute(WsdlGlossary.Message);

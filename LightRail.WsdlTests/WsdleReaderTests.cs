@@ -118,11 +118,11 @@ public class WsdleReaderTests
         wsdlReader.Read(file);
         wsdlReader.ResolveAll();
 
-        Operation getNothingValues = Operation.Create("GetNothingValues");
+        var getNothingValues = Operation.Create("GetNothingValues");
         getNothingValues.SetInput("http://tempuri.org/INothingService/GetNothingValues","tns:INothingService_GetNothingValues_InputMessage");
         getNothingValues.SetOutput("http://tempuri.org/INothingService/GetNothingValuesResponse","tns:INothingService_GetNothingValues_OutputMessage");
         
-        Operation getNothingWithQuery = Operation.Create("GetNothingWithQuery");
+        var getNothingWithQuery = Operation.Create("GetNothingWithQuery");
         getNothingWithQuery.SetInput("http://tempuri.org/INothingService/GetNothingWithQuery","tns:INothingService_GetNothingWithQuery_InputMessage");
         getNothingWithQuery.SetOutput("http://tempuri.org/INothingService/GetNothingWithQueryResponse","tns:INothingService_GetNothingWithQuery_OutputMessage");
             
