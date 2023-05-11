@@ -1,7 +1,7 @@
-using System.Text;
+using System.Collections.ObjectModel;
 using FluentAssertions;
-using FluentAssertions.Equivalency;
 using LightRail.Wsdl;
+using LightRail.Wsdl.Core;
 
 namespace LightRail.WsdlTests;
 
@@ -10,7 +10,7 @@ public class WsdleReaderTests
     [Fact]
     public void Check_If_WsdlReader_Is_Reading_Tree()
     {
-        string sampleXml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+        var sampleXml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
 <note>
   <to>Tove</to>
   <from>Jani</from>
@@ -27,7 +27,7 @@ public class WsdleReaderTests
     [Fact]
     public void Check_If_Wsdl_Tree_Has_Values()
     {
-        string sampleXml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+        var sampleXml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
 <note>
   <to id=""15"">Tove</to>
   <from>Jani</from>
@@ -43,7 +43,7 @@ public class WsdleReaderTests
             .BeEquivalentTo(NodeElement.Create("note", "note", new Dictionary<string, string>()));
 
         wsdlReader.Root.FirstChild.Data.Should()
-            .BeEquivalentTo(NodeElement.Create("to", "to", new Dictionary<string, string>()
+            .BeEquivalentTo(NodeElement.Create("to", "to", new Dictionary<string, string>
             {
                 { "id", "15" }
             }));
@@ -55,11 +55,11 @@ public class WsdleReaderTests
     [Fact]
     public void Check_If_WsdlReader_Is_Resolving_Soap_Operation_Namespace()
     {
-        string sampleXml = """
+        var sampleXml = """
                             <wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap12/"
                             xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tds="http://www.onvif.org/ver10/device/wsdl" targetNamespace="http://www.onvif.org/ver10/device/wsdl"></wsdl:definitions>
                            """;
-        
+
         var wsdlReader = new WsdlReader();
         wsdlReader.Read(sampleXml);
         wsdlReader.ResolveAll();
@@ -67,5 +67,46 @@ public class WsdleReaderTests
         wsdlReader.TargetNamespace.Should().Be("http://www.onvif.org/ver10/device/wsdl");
         wsdlReader.SoapActionNamespace.Should().Be("tds");
         wsdlReader.ServiceName.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Check_If_WsdlReader_Is_Resolving_Wsdl_Message()
+    {
+        var wsdlReader = new WsdlReader();
+        using var file = File.OpenRead("wcf.xsd");
+        wsdlReader.Read(file);
+        wsdlReader.ResolveAll();
+
+        wsdlReader.TargetNamespace.Should().Be("http://tempuri.org/");
+        wsdlReader.SoapActionNamespace.Should().Be("tns");
+        wsdlReader.ServiceName.Should().Be("NothingService");
+        wsdlReader.Messages.Count.Should().Be(4);
+        wsdlReader.Messages.Should().BeEquivalentTo(new Dictionary<string, IReadOnlyList<Part>>
+        {
+            {
+                "INothingService_GetNothingValues_InputMessage", new Collection<Part>
+                {
+                    new("parameters", "tns:GetNothingValues")
+                }
+            },
+            {
+                "INothingService_GetNothingValues_OutputMessage", new Collection<Part>
+                {
+                    new("parameters", "tns:GetNothingValuesResponse")
+                }
+            },
+            {
+                "INothingService_GetNothingWithQuery_InputMessage", new Collection<Part>
+                {
+                    new("parameters", "tns:GetNothingWithQuery")
+                }
+            },
+            {
+                "INothingService_GetNothingWithQuery_OutputMessage", new Collection<Part>
+                {
+                    new("parameters", "tns:GetNothingWithQueryResponse")
+                }
+            }
+        });
     }
 }

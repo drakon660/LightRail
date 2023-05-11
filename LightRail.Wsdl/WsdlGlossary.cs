@@ -1,7 +1,8 @@
 namespace LightRail.Wsdl;
 
-public class WsdlGlossary
+public static class WsdlGlossary
 {
     public const string TargetNamespace = "targetNamespace";
-    public const string WsdlDefinitions = "definitions";
+    public const string Definitions = "definitions";
+    public const string Message = "message";
 }

@@ -16,6 +16,8 @@ public class WsdlReader
     private const char Separator = ':';
 
     public TreeNode<NodeElement> Root { get; private set; }
+    
+    public Dictionary<string, IReadOnlyList<Part>> Messages { get; } = new ();
     public void Read(string xml) => Read(new MemoryStream(Encoding.UTF8.GetBytes(xml)));
 
     public void Read(Stream xsd)
@@ -56,12 +58,13 @@ public class WsdlReader
 
     public void ResolveAll()
     {
-        if (Root.Data.LocalName == WsdlGlossary.WsdlDefinitions)
+        if (Root.Data.LocalName == WsdlGlossary.Definitions)
             ResolveNamespaces(Root.Data);
 
         foreach (var element in Root.Children)
         {
-            
+            if(element.Data.Is(WsdlGlossary.Message))
+                ResolveMessage(element);
         }
     }
 
@@ -73,5 +76,20 @@ public class WsdlReader
             element.Attributes.First(kv => kv.Value == TargetNamespace && kv.Key != WsdlGlossary.TargetNamespace);
         
         SoapActionNamespace = attribute.Key.Split(Separator)[1];
+    }
+    
+    private void ResolveMessage(TreeNode<NodeElement> node)
+    {
+        string name = node.Data.FindNameAttribute();
+        List<Part> parts = new List<Part>();
+        foreach (var partNode in node.Children)
+        {
+            string partName = partNode.Data.FindNameAttribute();
+            string element = partNode.Data.FindAttribute("element");
+            Part part = new Part(partName, element);
+            parts.Add(part);
+        }
+
+        Messages.Add(name, parts);
     }
 }
