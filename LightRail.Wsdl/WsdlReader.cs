@@ -22,7 +22,7 @@ public class WsdlReader
 
     public void Read(Stream xsd)
     {
-        using XmlReader reader = XmlReader.Create(xsd);
+        using var reader = XmlReader.Create(xsd);
         while (reader.Read())
         {
             if (reader.NodeType == XmlNodeType.XmlDeclaration)
@@ -30,7 +30,7 @@ public class WsdlReader
 
             if (reader.NodeType == XmlNodeType.Element)
             {
-                Dictionary<string, string> attributes = new Dictionary<string, string>();
+                var attributes = new Dictionary<string, string>();
 
                 if (reader.HasAttributes)
                 {
@@ -80,13 +80,13 @@ public class WsdlReader
     
     private void ResolveMessage(TreeNode<NodeElement> node)
     {
-        string name = node.Data.FindNameAttribute();
-        List<Part> parts = new List<Part>();
+        var name = node.Data.FindNameAttribute();
+        var parts = new List<Part>();
         foreach (var partNode in node.Children)
         {
             string partName = partNode.Data.FindNameAttribute();
             string element = partNode.Data.FindAttribute("element");
-            Part part = new Part(partName, element);
+            var part = new Part(partName, element);
             parts.Add(part);
         }
 
