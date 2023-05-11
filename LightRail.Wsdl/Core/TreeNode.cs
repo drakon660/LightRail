@@ -18,7 +18,7 @@ public class TreeNode<T> where T : NodeElement
 
     public static TreeNode<T> Create(T data, int level) => new TreeNode<T>(data, level);
 
-    public void SetParent(TreeNode<T> parent)
+    private void SetParent(TreeNode<T> parent)
     {
         Parent = parent;
     }

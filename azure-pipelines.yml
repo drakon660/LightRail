@@ -2,18 +2,26 @@ trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 variables:  
   buildConfiguration: 'Release'
 
-steps:
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'restore'   
+# steps:  
+# - task: DotNetCoreCLI@2
+#   inputs:
+#     command: 'build'
+#     arguments: '--configuration $(buildConfiguration)'
+#   displayName: 'dotnet build $(buildConfiguration)'
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-    arguments: '--configuration $(buildConfiguration)'
-  displayName: 'dotnet build $(buildConfiguration)'
+steps:
+  - task: Cache@2  # Not required, but Qodana will open projects with cache faster.
+    inputs:
+      key: '"$(Build.Repository.Name)" | "$(Build.SourceBranchName)" | "$(Build.SourceVersion)"'
+      path: '$(Agent.TempDirectory)/qodana/cache'
+      restoreKeys: |
+        "$(Build.Repository.Name)" | "$(Build.SourceBranchName)"
+        "$(Build.Repository.Name)"
+  - task: QodanaScan@2023
+    env:
+      QODANA_TOKEN: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb24iOiJ6RURZaiIsInByb2plY3QiOiJBbERLaiIsInRva2VuIjoiekVxOGUifQ.i0X68z2kHRxaxZzZboi06jzdc4OpBnvI8WMIJVhzn_M'
