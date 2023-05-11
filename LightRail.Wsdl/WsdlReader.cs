@@ -104,20 +104,14 @@ public class WsdlReader
             Operation operation = Operation.Create(operationName);
             foreach (var operationChild in operationNode.Children)
             {
+                var message = operationChild.Data.FindAttribute(WsdlGlossary.Message);
+                var action = operationChild.Data.FindAttribute(WsdlGlossary.WsawAction, WsdlGlossary.WsamAction);
+                
                 if (operationChild.Data.Is(WsdlGlossary.OperationInput))
-                {
-                    var message = operationChild.Data.FindAttribute(WsdlGlossary.Message);
-                    var action = operationChild.Data.FindAttribute(WsdlGlossary.WsawAction, WsdlGlossary.WsamAction);
-                    
                     operation.SetInput(action, message);
-                }
-
+                
                 if (operationChild.Data.Is( WsdlGlossary.OperationOutput))
-                {
-                    var message = operationChild.Data.FindAttribute(WsdlGlossary.Message);
-                    var action = operationChild.Data.FindAttribute(WsdlGlossary.WsawAction, WsdlGlossary.WsamAction);
                     operation.SetOutput(action, message);
-                }
             }
             Operations.Add(operation.Name, operation);
         }
