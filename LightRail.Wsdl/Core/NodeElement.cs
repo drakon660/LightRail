@@ -17,6 +17,19 @@ public class NodeElement
         new (name, localName, attributes);
     
     public string FindAttribute(string name) => Attributes.TryGetValue(name, out var attributeValue) ? attributeValue : string.Empty;
+
+    public string FindAttribute(params string[] names)
+    {
+        foreach (var name in names)
+        {
+            var value = FindAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+                return value;
+        }
+
+        return string.Empty;
+    }
+
     public string FindNameAttribute() => FindAttribute("name");
     public string FindAttributeValue(string value) => Attributes.SingleOrDefault(x=>x.Value == value).Key ?? string.Empty;
     public bool Is(string name) => LocalName == name;

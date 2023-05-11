@@ -109,4 +109,27 @@ public class WsdleReaderTests
             }
         });
     }
+
+    [Fact]
+    public void Check_If_WsdlReader_Is_Resolving_Operations_From_PortType()
+    {
+        var wsdlReader = new WsdlReader();
+        using var file = File.OpenRead("wcf.xsd");
+        wsdlReader.Read(file);
+        wsdlReader.ResolveAll();
+
+        Operation getNothingValues = Operation.Create("GetNothingValues");
+        getNothingValues.SetInput("http://tempuri.org/INothingService/GetNothingValues","tns:INothingService_GetNothingValues_InputMessage");
+        getNothingValues.SetOutput("http://tempuri.org/INothingService/GetNothingValuesResponse","tns:INothingService_GetNothingValues_OutputMessage");
+        
+        Operation getNothingWithQuery = Operation.Create("GetNothingWithQuery");
+        getNothingWithQuery.SetInput("http://tempuri.org/INothingService/GetNothingWithQuery","tns:INothingService_GetNothingWithQuery_InputMessage");
+        getNothingWithQuery.SetOutput("http://tempuri.org/INothingService/GetNothingWithQueryResponse","tns:INothingService_GetNothingWithQuery_OutputMessage");
+            
+        wsdlReader.Operations.Should().BeEquivalentTo(new Dictionary<string, Operation>
+        {
+            { "GetNothingValues", getNothingValues },
+            { "GetNothingWithQuery", getNothingWithQuery }
+        });
+    }
 }

@@ -6,8 +6,8 @@ namespace LightRail.Wsdl;
 
 public class WsdlReader
 {
-    public string ServiceName { get; private set; } = ""; 
-    public string SoapActionNamespace { get; private set; } 
+    public string ServiceName { get; private set; } = "";
+    public string SoapActionNamespace { get; private set; }
     public string TargetNamespace { get; private set; }
     public string WsdlNamespace { get; private set; }
     public string SoapNamespace { get; private set; }
@@ -16,8 +16,9 @@ public class WsdlReader
     private const char Separator = ':';
 
     public TreeNode<NodeElement> Root { get; private set; }
-    
-    public Dictionary<string, IReadOnlyList<Part>> Messages { get; } = new ();
+
+    public Dictionary<string, IReadOnlyList<Part>> Messages { get; } = new();
+    public Dictionary<string, Operation> Operations { get; } = new ();
     public void Read(string xml) => Read(new MemoryStream(Encoding.UTF8.GetBytes(xml)));
 
     public void Read(Stream xsd)
@@ -63,21 +64,23 @@ public class WsdlReader
 
         foreach (var element in Root.Children)
         {
-            if(element.Data.Is(WsdlGlossary.Message))
+            if (element.Data.Is(WsdlGlossary.Message))
                 ResolveMessage(element);
+            if (element.Data.Is(WsdlGlossary.PortType))
+                ResolvePortType(element);
         }
     }
 
     private void ResolveNamespaces(NodeElement element)
     {
-        ServiceName = element.FindAttribute("name");
+        ServiceName = element.FindNameAttribute();
         TargetNamespace = element.FindAttribute(WsdlGlossary.TargetNamespace);
         var attribute =
             element.Attributes.First(kv => kv.Value == TargetNamespace && kv.Key != WsdlGlossary.TargetNamespace);
-        
+
         SoapActionNamespace = attribute.Key.Split(Separator)[1];
     }
-    
+
     private void ResolveMessage(TreeNode<NodeElement> node)
     {
         var name = node.Data.FindNameAttribute();
@@ -91,5 +94,40 @@ public class WsdlReader
         }
 
         Messages.Add(name, parts);
+    }
+
+    private void ResolvePortType(TreeNode<NodeElement> node)
+    {
+        foreach (var operationNode in node.Children)
+        {
+            var operationName = operationNode.Data.FindNameAttribute();
+            Operation operation = Operation.Create(operationName);
+            foreach (var operationChild in operationNode.Children)
+            {
+                if (operationChild.Data.Is(WsdlGlossary.OperationInput))
+                {
+                    var message = operationChild.Data.FindAttribute(WsdlGlossary.Message);
+                    var action = operationChild.Data.FindAttribute(WsdlGlossary.WsawAction, WsdlGlossary.WsamAction);
+                    
+                    operation.SetInput(action, message);
+                }
+
+                if (operationChild.Data.Is( WsdlGlossary.OperationOutput))
+                {
+                    var message = operationChild.Data.FindAttribute(WsdlGlossary.Message);
+                    var action = operationChild.Data.FindAttribute(WsdlGlossary.WsawAction, WsdlGlossary.WsamAction);
+                    operation.SetOutput(action, message);
+                }
+            }
+            Operations.Add(operation.Name, operation);
+        }
+    }
+
+    private void ResolveBinding(TreeNode<NodeElement> node)
+    {
+        foreach (var operationNode in node.Children)
+        {
+            
+        }
     }
 }
