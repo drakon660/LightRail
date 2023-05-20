@@ -16,9 +16,11 @@ public class WsdlReader
     private const char Separator = ':';
 
     public TreeNode<NodeElement> Root { get; private set; }
-
     public Dictionary<string, IReadOnlyList<Part>> Messages { get; } = new();
-    public Dictionary<string, Operation> Operations { get; } = new ();
+    public Dictionary<string, Operation> Operations { get; } = new();
+
+    public List<Element> Elements = new();
+    
     public void Read(string xml) => Read(new MemoryStream(Encoding.UTF8.GetBytes(xml)));
 
     public void Read(Stream xsd)
@@ -57,15 +59,19 @@ public class WsdlReader
 
     public void ResolveAll()
     {
-        if (Root.Data.LocalName == WsdlGlossary.Definitions)
+        if (Root.Data.Is(WsdlGlossary.Definitions))
             ResolveNamespaces(Root.Data);
 
         foreach (var element in Root.Children)
         {
+            if (element.Data.Is(WsdlGlossary.Types))
+                ResolveTypes(element);
             if (element.Data.Is(WsdlGlossary.Message))
                 ResolveMessage(element);
             if (element.Data.Is(WsdlGlossary.PortType))
                 ResolvePortType(element);
+            if (element.Data.Is(WsdlGlossary.Binding))
+                ResolveBinding(element);
         }
     }
 
@@ -86,7 +92,7 @@ public class WsdlReader
         foreach (var partNode in node.Children)
         {
             string partName = partNode.Data.FindNameAttribute();
-            string element = partNode.Data.FindAttribute("element");
+            string element = partNode.Data.FindAttribute(WsdlGlossary.Element);
             var part = new Part(partName, element);
             parts.Add(part);
         }
@@ -104,13 +110,14 @@ public class WsdlReader
             {
                 var message = operationChild.Data.FindAttribute(WsdlGlossary.Message);
                 var action = operationChild.Data.FindAttribute(WsdlGlossary.WsawAction, WsdlGlossary.WsamAction);
-                
+
                 if (operationChild.Data.Is(WsdlGlossary.OperationInput))
                     operation.SetInput(action, message);
-                
-                if (operationChild.Data.Is( WsdlGlossary.OperationOutput))
+
+                if (operationChild.Data.Is(WsdlGlossary.OperationOutput))
                     operation.SetOutput(action, message);
             }
+
             Operations.Add(operation.Name, operation);
         }
     }
@@ -119,7 +126,40 @@ public class WsdlReader
     {
         foreach (var operationNode in node.Children)
         {
+            if (operationNode.Data.Is(WsdlGlossary.Operation))
+            {
+                var operationName = operationNode.Data.FindNameAttribute();
+                var soapOperation = operationNode.FindChildByName(SoapGlossary.Operation);
+
+                if (Operations.TryGetValue(operationName, out var operation))
+                {
+                    var soapAction = soapOperation.FindAttribute(SoapGlossary.Action);
+                    operation.SetSoapAction(soapAction);
+                }
+            }
+        }
+    }
+
+    private void ResolveTypes(TreeNode<NodeElement> node)
+    {
+        foreach (var element in node.Children) //Schema
+            ResolveSchema(element);
+    }
+
+    private void ResolveSchema(TreeNode<NodeElement> node)
+    {
+        foreach (var nodeElement in node.Children)
+        {
+            if (!nodeElement.Data.Is(WsdlGlossary.Element)) continue;
+            var name = nodeElement.Data.FindNameAttribute();
+            var type = nodeElement.Data.FindTypeAttribute();
+
+            if (string.IsNullOrEmpty(type)) continue;
             
+            var isNillable = nodeElement.Data.FindNillableAttribute();
+
+            var element = Element.Create(name, isNillable, type);
+            Elements.Add(element);
         }
     }
 }

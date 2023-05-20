@@ -23,6 +23,22 @@ public class TreeNode<T> where T : NodeElement
         Parent = parent;
     }
 
+    public T FindChildByName(string name)
+    {
+        if (name == Data.Name)
+            return Data;
+
+        foreach (var nodeElement in Children)
+        {
+            var t = nodeElement.FindChildByName(name);
+
+            if (t != null)
+                return t;
+        }
+
+        return default;
+    }
+    
     public void AddChildAtLevel(int level, TreeNode<T> child)
     {
         if (level < 0)

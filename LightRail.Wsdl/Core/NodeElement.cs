@@ -32,5 +32,14 @@ public class NodeElement
 
     public string FindNameAttribute() => FindAttribute("name");
     public string FindAttributeValue(string value) => Attributes.SingleOrDefault(x=>x.Value == value).Key ?? string.Empty;
+    public string FindTypeAttribute() => FindAttribute("type");
+    public bool FindNillableAttribute() => FindAttribute<bool>("nillable");
     public bool Is(string name) => LocalName == name;
+    
+    private static T ConvertStringTo<T>(string input)
+    {
+        return (T)Convert.ChangeType(input, typeof(T));
+    }
+
+    private T FindAttribute<T>(string name) => Attributes.TryGetValue(name, out var value) ? ConvertStringTo<T>(value) : default;
 }

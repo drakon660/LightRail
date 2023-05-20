@@ -111,7 +111,7 @@ public class WsdleReaderTests
     }
 
     [Fact]
-    public void Check_If_WsdlReader_Is_Resolving_Operations_From_PortType()
+    public void Check_If_WsdlReader_Is_Resolving_Operations()
     {
         var wsdlReader = new WsdlReader();
         using var file = File.OpenRead("wcf.xsd");
@@ -119,10 +119,12 @@ public class WsdleReaderTests
         wsdlReader.ResolveAll();
 
         var getNothingValues = Operation.Create("GetNothingValues");
+        getNothingValues.SetSoapAction("http://tempuri.org/INothingService/GetNothingValues");
         getNothingValues.SetInput("http://tempuri.org/INothingService/GetNothingValues","tns:INothingService_GetNothingValues_InputMessage");
         getNothingValues.SetOutput("http://tempuri.org/INothingService/GetNothingValuesResponse","tns:INothingService_GetNothingValues_OutputMessage");
         
         var getNothingWithQuery = Operation.Create("GetNothingWithQuery");
+        getNothingWithQuery.SetSoapAction("http://tempuri.org/INothingService/GetNothingWithQuery");
         getNothingWithQuery.SetInput("http://tempuri.org/INothingService/GetNothingWithQuery","tns:INothingService_GetNothingWithQuery_InputMessage");
         getNothingWithQuery.SetOutput("http://tempuri.org/INothingService/GetNothingWithQueryResponse","tns:INothingService_GetNothingWithQuery_OutputMessage");
             
@@ -131,5 +133,16 @@ public class WsdleReaderTests
             { "GetNothingValues", getNothingValues },
             { "GetNothingWithQuery", getNothingWithQuery }
         });
+    }
+
+    [Fact]
+    public void Check_If_WsdlReader_Is_Resolving_Elements_From_Schema()
+    {
+        var wsdlReader = new WsdlReader();
+        using var file = File.OpenRead("wcf.xsd");
+        wsdlReader.Read(file);
+        wsdlReader.ResolveAll();
+
+        wsdlReader.Elements.Count.Should().BePositive();
     }
 }
