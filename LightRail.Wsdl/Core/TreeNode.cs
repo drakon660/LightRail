@@ -3,15 +3,15 @@ namespace LightRail.Wsdl.Core;
 public class TreeNode<T> where T : NodeElement
 {
     public int Level { get; set; }
-    public T Data { get; set; }
+    public T Content { get; set; }
     private TreeNode<T> Parent { get; set; }
     public List<TreeNode<T>> Children { get; }
     public TreeNode<T> FirstChild => Children?.FirstOrDefault();
     public bool HasMultipleChildren => Children?.Count > 1;
 
-    private TreeNode(T data, int level)
+    private TreeNode(T content, int level)
     {
-        Data = data;
+        Content = content;
         Children = new List<TreeNode<T>>();
         Level = level;
     }
@@ -25,8 +25,8 @@ public class TreeNode<T> where T : NodeElement
 
     public T FindChildByName(string name)
     {
-        if (name == Data.Name)
-            return Data;
+        if (name == Content.Name)
+            return Content;
 
         foreach (var nodeElement in Children)
         {

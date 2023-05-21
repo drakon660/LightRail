@@ -38,11 +38,11 @@ public class WsdleReaderTests
         var wsdlReader = new WsdlReader();
         wsdlReader.Read(sampleXml);
 
-        wsdlReader.Root.Data.Should().NotBeNull();
-        wsdlReader.Root.Data.Should()
+        wsdlReader.Root.Content.Should().NotBeNull();
+        wsdlReader.Root.Content.Should()
             .BeEquivalentTo(NodeElement.Create("note", "note", new Dictionary<string, string>()));
 
-        wsdlReader.Root.FirstChild.Data.Should()
+        wsdlReader.Root.FirstChild.Content.Should()
             .BeEquivalentTo(NodeElement.Create("to", "to", new Dictionary<string, string>
             {
                 { "id", "15" }
@@ -144,5 +144,15 @@ public class WsdleReaderTests
         wsdlReader.ResolveAll();
 
         wsdlReader.Elements.Count.Should().BePositive();
+    }
+
+    [Fact]
+    public void Check_If_WsdlReader_Can_Build_Operations()
+    {
+        var wsdlReader = new WsdlReader();
+        using var file = File.OpenRead("wcf.xsd");
+        wsdlReader.Read(file);
+        wsdlReader.ResolveAll();
+        wsdlReader.Build();
     }
 }
