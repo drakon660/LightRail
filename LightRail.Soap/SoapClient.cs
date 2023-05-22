@@ -53,7 +53,7 @@ public class SoapClient : ISoapClient
         => _httpClientFactory = DefaultHttpClientFactory();
 
     /// <inheritdoc />
-    public Task<HttpResponseMessage> PostAsync(
+    public async Task<HttpResponseMessage> PostAsync(
         Uri endpoint,
         SoapVersion soapVersion,
         IEnumerable<XElement> bodies,
@@ -96,9 +96,15 @@ public class SoapClient : ISoapClient
                     new NameValueHeaderValue("ActionParameter", $"\"{action}\""));
         }
 
+        string contentRaw = await content.ReadAsStringAsync(cancellationToken);
+        
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
-        return httpClient.PostAsync(endpoint, content, cancellationToken);
+        var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
+       
+        var responseContent = await response.Content.ReadAsStringAsync();
+        
+        return response;
     }
 
     #region Private Methods
@@ -122,7 +128,8 @@ public class SoapClient : ISoapClient
             .ConfigurePrimaryHttpMessageHandler(e =>
                 new HttpClientHandler
                 {
-                    AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+                    AllowAutoRedirect = true
+                    //AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
                 });
 
         return serviceProvider.BuildServiceProvider().GetService<IHttpClientFactory>()!;
