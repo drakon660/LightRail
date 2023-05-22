@@ -101,8 +101,11 @@ public class SoapClient : ISoapClient
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
         var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
-       
-        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (response.Content.Headers.ContentType?.MediaType != messageConfiguration.MediaType)
+            throw new Exception("Response is not xml");    
+        
+        //var responseContent = await response.Content.ReadAsStringAsync();
         
         return response;
     }
@@ -128,8 +131,8 @@ public class SoapClient : ISoapClient
             .ConfigurePrimaryHttpMessageHandler(e =>
                 new HttpClientHandler
                 {
-                    AllowAutoRedirect = true
-                    //AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+                    AllowAutoRedirect = true,
+                    AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
                 });
 
         return serviceProvider.BuildServiceProvider().GetService<IHttpClientFactory>()!;

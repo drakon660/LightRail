@@ -43,7 +43,7 @@ public class SoapClientTest
             await soapClient.PostAsync(
                 new Uri("https://lightrail-2.azurewebsites.net/nothing.svc"),
                 SoapVersion.Soap11,
-                action:" http://tempuri.org/INothingService/GetNothingWithSimpleInput",
+                action:"http://tempuri.org/INothingService/GetNothingWithSimpleInput",
                 body: methodBody);
 
         Assert.Equal(HttpStatusCode.OK, actual.StatusCode);
