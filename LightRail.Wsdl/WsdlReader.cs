@@ -15,8 +15,10 @@ public class WsdlReader
     public TreeNode<NodeElement> Root { get; private set; }
     public Dictionary<string, IReadOnlyList<Part>> Messages { get; } = new();
     public Dictionary<string, Operation> Operations { get; } = new();
-    public List<Element> Elements  { get; } = new();
     
+    public Dictionary<string, Element> ComplexTypes { get; } = new();
+    public List<Element> Elements { get; } = new();
+
     public void Read(string xml) => Read(new MemoryStream(Encoding.UTF8.GetBytes(xml)));
 
     public void Read(Stream xsd)
@@ -146,92 +148,195 @@ public class WsdlReader
     {
         foreach (var child in node.Children)
         {
-            if (child.Content.Is(WsdlGlossary.Element))
+            if (child.Content.Is(WsdlGlossary.Element) && child.HasChildren)
             {
                 ResolveGlobalElement(child);
+            }
+
+            if (child.Content.Is(WsdlGlossary.Element) && !child.HasChildren)
+            {
+                var element = child.Content.ToXsdElement();
+                Elements.Add(element);
+            }
+
+            if (child.Content.Is(WsdlGlossary.ComplexType))
+            {
+                var element = ResolveComplexType(child);
+                ComplexTypes.Add(element.Name, element);
             }
         }
     }
 
+    private Element ResolveComplexType(TreeNode<NodeElement> node)
+    {
+        var grandChild = node.FirstChild;
+
+        var parent = node.Content.ToXsdElement();
+
+        if (!parent.HasName)
+            parent = node.Parent.Content.ToXsdElement();
+        
+        if (grandChild.Content.Is(WsdlGlossary.Sequence))
+        {
+            foreach (var grandChildChild in grandChild.Children)
+            {
+                if (!grandChildChild.Content.Is(WsdlGlossary.Element))
+                    throw new Exception($"sequence child {grandChildChild.Content.Name} not recognized");
+
+                var element = grandChildChild.Content.ToXsdElement();
+                parent.AddChild(element);
+            }
+        }
+
+        return parent;
+    }
+    
     private void ResolveGlobalElement(TreeNode<NodeElement> node)
     {
         var parentElement = node.Content.ToXsdElement();
-        
-        if (parentElement.HasTypeAttribute) //Type //Ref?
-            return;
+
+        if (parentElement.HasTypeAttribute) //Type //Ref? element inside Types
+        {
+            //return;
+        }
         
         var child = node.FirstChild;
         if (child != null)
         {
-            if (child.Content.Is(WsdlGlossary.ComplexType)) 
+            if (child.Content.Is(WsdlGlossary.ComplexType))
             {
-                var grandChild = child.FirstChild;
-                if (grandChild.Content.Is(WsdlGlossary.Sequence))
-                {
-                    foreach (var grandChildChild in grandChild.Children)
-                    {
-                        if (!grandChildChild.Content.Is(WsdlGlossary.Element))
-                            throw new Exception($"sequence child {grandChildChild.Content.Name} not recognized");
-
-                        var element = grandChildChild.Content.ToXsdElement();
-                        parentElement.AddChild(element);
-                    }
-                }
+                var complexTypeElement = ResolveComplexType(child);
+                Elements.Add(complexTypeElement);
             }
         }
-        
-        Elements.Add(parentElement);
     }
 
-    public IReadOnlyDictionary<string, List<string>> Build()
+    public OperationParam BuildFromElement(Element element)
     {
-        Dictionary<string, List<string>> operationWithParams = new();
+        if (element.IsSimpleType)
+        {
+            return OperationParam.Create(element.Name);
+        }
+
+        var operationParam = OperationParam.Create(element.Name);
+            
+        foreach (var childElement in element.Children)
+        {
+            var operationParamChild = BuildFromElement(childElement);
+            operationParam.AddChild(operationParamChild);
+        }   
+            
+        return operationParam;
+    }
+    
+
+    public IReadOnlyDictionary<string, List<OperationParam>> Build()
+    {
+        Dictionary<string, List<OperationParam>> operationWithParams = new();
 
         foreach (var operation in Operations)
         {
             var inputMessage = operation.Value.Input.Message.Replace(SoapActionNamespace + ":", string.Empty);
-            var outputMessage = operation.Value.Output.Message.Replace(SoapActionNamespace + ":", string.Empty);;
+            var outputMessage = operation.Value.Output.Message.Replace(SoapActionNamespace + ":", string.Empty);
 
-            List<string> operationParameters = new List<string>();
-            
+            List<OperationParam> operationParameters = new List<OperationParam>();
+
             if (Messages.TryGetValue(inputMessage, out var inputMessageParts))
             {
                 var part = inputMessageParts.First();
                 var elementName = part.Element;
 
-                var element = Elements.FirstOrDefault(x => x.Name == elementName.Replace(SoapActionNamespace + ":", string.Empty));
-                
-                if(element.IsSimpleType)
-                    operationParameters.Add(element.Name);
-                else
+                var element = Elements.FirstOrDefault(x =>
+                    x.Name == elementName.Replace(SoapActionNamespace + ":", string.Empty));
+
+                if (element.Children.Any())
                 {
                     foreach (var childElement in element.Children)
                     {
-                        operationParameters.Add(childElement.Name);
+                        if (childElement.IsSimpleType)
+                        {
+                            OperationParam param = BuildFromElement(childElement);
+                            operationParameters.Add(param);    
+                        }
+                        else
+                        {
+                            var complexType = ComplexTypes[childElement.TypeWithoutNamespace];
+                            OperationParam param = BuildFromElement(complexType);
+                            operationParameters.Add(param);    
+                        }
                     }
                 }
+                
+                // if (element.IsSimpleType)
+                // {
+                //     var operationParam = OperationParam.Create(element.Name);
+                //     operationParameters.Add(operationParam);
+                // }
+                // else
+                // {
+                //     foreach (var childElement in element.Children)
+                //     {
+                //         if (childElement.IsSimpleType)
+                //         {
+                //             var operationParam = OperationParam.Create(childElement.Name);
+                //             operationParameters.Add(operationParam);
+                //         }
+                //         else
+                //         {
+                //             
+                //         }
+                //     }
+                // }
             }
 
-            if (Messages.TryGetValue(outputMessage, out var outputMessageParts))
-            {
-                var part = outputMessageParts.First();
-                var elementName = part.Element;
-                var element = Elements.FirstOrDefault(x => x.Name == elementName.Replace(SoapActionNamespace + ":", string.Empty));
-                
-                if(element.IsSimpleType)
-                    operationParameters.Add(element.Name);
-                else
-                {
-                    foreach (var childElement in element.Children)
-                    {
-                        operationParameters.Add(childElement.Name);
-                    }
-                }
-            }
-            
+            //TODO
+            // if (Messages.TryGetValue(outputMessage, out var outputMessageParts))
+            // {
+            //     var part = outputMessageParts.First();
+            //     var elementName = part.Element;
+            //     var element = Elements.FirstOrDefault(x => x.Name == elementName.Replace(SoapActionNamespace + ":", string.Empty));
+            //     
+            //     if(element.IsSimpleType)
+            //         operationParameters.Add(element.Name);
+            //     else
+            //     {
+            //         foreach (var childElement in element.Children)
+            //         {
+            //             operationParameters.Add(childElement.Name);
+            //         }
+            //     }
+            // }
+
             operationWithParams.Add(operation.Key, operationParameters);
         }
 
         return operationWithParams;
     }
+}
+
+public class OperationParam
+{
+    public string Name { get; }
+
+    private readonly List<OperationParam> _children;
+    public IReadOnlyList<OperationParam> Children => _children;
+
+    private OperationParam(string name)
+    {
+        Name = name;
+        _children = new();
+    }
+
+    private OperationParam(string name, List<OperationParam> children) : this(name)
+    {
+        _children = children;
+    }
+
+    public void AddChild(OperationParam child) => _children.Add(child);
+    
+    public static OperationParam Create(string name, List<OperationParam> children) =>
+        new OperationParam(name, children);
+    
+    public static OperationParam Create(string name) =>
+        new OperationParam(name);
 }

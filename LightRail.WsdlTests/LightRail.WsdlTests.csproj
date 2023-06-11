@@ -33,6 +33,18 @@
       <Content Include="wcf.xsd">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <None Remove="wcf-2.xsd" />
+      <Content Include="wcf-2.xsd">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="wcf-3.xsd" />
+      <Content Include="wcf-3.xsd">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="wsdl-4.xsd" />
+      <Content Include="wcf-4.xsd">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

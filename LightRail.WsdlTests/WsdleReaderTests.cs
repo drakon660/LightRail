@@ -150,9 +150,58 @@ public class WsdleReaderTests
     public void Check_If_WsdlReader_Can_Build_Operations()
     {
         var wsdlReader = new WsdlReader();
-        using var file = File.OpenRead("wcf.xsd");
+        using var file = File.OpenRead("wcf-2.xsd");
         wsdlReader.Read(file);
         wsdlReader.ResolveAll();
-        wsdlReader.Build();
+        var  operation = wsdlReader.Build();
+
+        operation.Count.Should().Be(4);
+        operation.Should().BeEquivalentTo(new Dictionary<string, List<string>>()
+        { 
+            { "GetNothing", new List<string>() { } },
+            { "ReturnInteger", new List<string>() { } },
+            { "ReturnString", new List<string>() { } },
+            { "GetNothingWithSimpleInput", new List<string>() { "value1", "value2" } }
+        });
+    }
+    
+    
+    [Fact]
+    public void Check_If_WsdlReader_Can_Build_Operations2()
+    {
+        var wsdlReader = new WsdlReader();
+        using var file = File.OpenRead("wcf-3.xsd");
+        wsdlReader.Read(file);
+        wsdlReader.ResolveAll();
+        var  operation = wsdlReader.Build();
+
+        operation.Count.Should().Be(5);
+        operation.Should().BeEquivalentTo(new Dictionary<string, List<OperationParam>>()
+        { 
+            { "GetNothing", new List<OperationParam>() { } },
+            { "ReturnInteger", new List<OperationParam>() { } },
+            { "ReturnString", new List<OperationParam>() { } },
+            { "GetNothingWithSimpleInput", new List<OperationParam>()
+            {
+                OperationParam.Create("value1"), OperationParam.Create("value2")
+            } },
+            { "GetNothingValues", new List<OperationParam>() { OperationParam.Create("value1"), OperationParam.Create("input") } }
+        });
+    }
+    
+    [Fact]
+    public void Check_If_WsdlReader_Can_Build_Operations3()
+    {
+        var wsdlReader = new WsdlReader();
+        using var file = File.OpenRead("wcf-4.xsd");
+        wsdlReader.Read(file);
+        wsdlReader.ResolveAll();
+        var  operation = wsdlReader.Build();
+
+        operation.Count.Should().Be(1);
+        operation.Should().BeEquivalentTo(new Dictionary<string, List<OperationParam>>()
+        { 
+            { "GetValues", new List<OperationParam>() { OperationParam.Create("input") } }
+        });
     }
 }

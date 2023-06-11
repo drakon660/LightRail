@@ -4,10 +4,11 @@ public class TreeNode<T> where T : NodeElement
 {
     public int Level { get; set; }
     public T Content { get; set; }
-    private TreeNode<T> Parent { get; set; }
+    public TreeNode<T> Parent { get; private set; }
     public List<TreeNode<T>> Children { get; }
     public TreeNode<T> FirstChild => Children?.FirstOrDefault();
     public bool HasMultipleChildren => Children?.Count > 1;
+    public bool HasChildren => Children?.Count > 0;
 
     private TreeNode(T content, int level)
     {
