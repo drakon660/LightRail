@@ -6,38 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LightRail.Soap;
 
-public record SoapMessageConfiguration(SoapVersion SoapVersion)
-{
-    public string MediaType =>
-        SoapVersion == SoapVersion.Soap11
-            ? "text/xml"
-            : "application/soap+xml";
-
-    public XNamespace Schema =>
-        SoapVersion == SoapVersion.Soap11
-            ? "http://schemas.xmlsoap.org/soap/envelope/"
-            : "http://www.w3.org/2003/05/soap-envelope";
-}
-
-public enum SoapVersion
-{
-    Soap11 = 11,
-    Soap12 = 12
-}
-
-public interface ISoapClient
-{
-    /// <summary>
-    /// Posts an asynchronous message.
-    /// </summary>
-    /// <param name="endpoint">The endpoint.</param>
-    /// <param name="soapVersion">The preferred SOAP version.</param>
-    /// <param name="bodies">The body of the SOAP message.</param>
-    /// <param name="headers">The header of the SOAP message.</param>
-    /// <param name="action">The SOAPAction of the SOAP message.</param>
-    Task<HttpResponseMessage> PostAsync(Uri endpoint, SoapVersion soapVersion, IEnumerable<XElement> bodies, IEnumerable<XElement>? headers = null, string? action = null, CancellationToken cancellationToken = default(CancellationToken));
-}
-
 public class SoapClient : ISoapClient
 {
     private readonly IHttpClientFactory _httpClientFactory;

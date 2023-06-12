@@ -145,26 +145,7 @@ public class WsdleReaderTests
 
         wsdlReader.Elements.Count.Should().BePositive();
     }
-
-    [Fact]
-    public void Check_If_WsdlReader_Can_Build_Operations()
-    {
-        var wsdlReader = new WsdlReader();
-        using var file = File.OpenRead("wcf-2.xsd");
-        wsdlReader.Read(file);
-        wsdlReader.ResolveAll();
-        var  operation = wsdlReader.Build();
-
-        operation.Count.Should().Be(4);
-        operation.Should().BeEquivalentTo(new Dictionary<string, List<string>>()
-        { 
-            { "GetNothing", new List<string>() { } },
-            { "ReturnInteger", new List<string>() { } },
-            { "ReturnString", new List<string>() { } },
-            { "GetNothingWithSimpleInput", new List<string>() { "value1", "value2" } }
-        });
-    }
-    
+ 
     
     [Fact]
     public void Check_If_WsdlReader_Can_Build_Operations2()
@@ -183,9 +164,13 @@ public class WsdleReaderTests
             { "ReturnString", new List<OperationParam>() { } },
             { "GetNothingWithSimpleInput", new List<OperationParam>()
             {
-                OperationParam.Create("value1"), OperationParam.Create("value2")
+                OperationParam.Create("value1","xs:string"), OperationParam.Create("value2","xs:int")
             } },
-            { "GetNothingValues", new List<OperationParam>() { OperationParam.Create("value1"), OperationParam.Create("input") } }
+            { "GetNothingValues", new List<OperationParam>() { OperationParam.Create("value1","xs:string"), OperationParam.Create("input","q1:Input", new List<OperationParam>()
+            {
+                OperationParam.Create("Id","xs:int"),
+                OperationParam.Create("Query","xs:string")
+            }) } }
         });
     }
     
@@ -198,10 +183,10 @@ public class WsdleReaderTests
         wsdlReader.ResolveAll();
         var  operation = wsdlReader.Build();
 
-        operation.Count.Should().Be(1);
+        operation.Count.Should().Be(2);
         operation.Should().BeEquivalentTo(new Dictionary<string, List<OperationParam>>()
         { 
-            { "GetValues", new List<OperationParam>() { OperationParam.Create("input") } }
+            { "GetValues", new List<OperationParam>() { OperationParam.Create("input","q1:Input") } }
         });
     }
 }

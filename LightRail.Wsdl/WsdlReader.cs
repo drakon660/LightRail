@@ -215,10 +215,10 @@ public class WsdlReader
     {
         if (element.IsSimpleType)
         {
-            return OperationParam.Create(element.Name);
+            return OperationParam.Create(element.Name ,element.Type);
         }
 
-        var operationParam = OperationParam.Create(element.Name);
+        var operationParam = OperationParam.Create(element.Name, element.Type);
             
         foreach (var childElement in element.Children)
         {
@@ -312,31 +312,4 @@ public class WsdlReader
 
         return operationWithParams;
     }
-}
-
-public class OperationParam
-{
-    public string Name { get; }
-
-    private readonly List<OperationParam> _children;
-    public IReadOnlyList<OperationParam> Children => _children;
-
-    private OperationParam(string name)
-    {
-        Name = name;
-        _children = new();
-    }
-
-    private OperationParam(string name, List<OperationParam> children) : this(name)
-    {
-        _children = children;
-    }
-
-    public void AddChild(OperationParam child) => _children.Add(child);
-    
-    public static OperationParam Create(string name, List<OperationParam> children) =>
-        new OperationParam(name, children);
-    
-    public static OperationParam Create(string name) =>
-        new OperationParam(name);
 }
