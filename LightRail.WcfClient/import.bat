@@ -1,0 +1,1 @@
+dotnet-svcutil http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc -n "*,LightRail.WcfClient"

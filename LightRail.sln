@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightRail.Soap", "LightRail
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightRail.SoapTests", "LightRail.SoapTests\LightRail.SoapTests.csproj", "{14CBFD2E-C93E-4337-9B73-E65F3296D97E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightRail.Soap.PerformanceTests", "LightRail.Soap.PerformanceTests\LightRail.Soap.PerformanceTests.csproj", "{D1DC74D4-F517-4CD7-9357-031B15E1F6B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightRail.WcfClient", "LightRail.WcfClient\LightRail.WcfClient.csproj", "{96586260-C130-4ED3-9452-D02BFF014F81}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +40,13 @@ Global
 		{14CBFD2E-C93E-4337-9B73-E65F3296D97E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14CBFD2E-C93E-4337-9B73-E65F3296D97E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14CBFD2E-C93E-4337-9B73-E65F3296D97E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1DC74D4-F517-4CD7-9357-031B15E1F6B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1DC74D4-F517-4CD7-9357-031B15E1F6B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1DC74D4-F517-4CD7-9357-031B15E1F6B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1DC74D4-F517-4CD7-9357-031B15E1F6B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96586260-C130-4ED3-9452-D02BFF014F81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96586260-C130-4ED3-9452-D02BFF014F81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96586260-C130-4ED3-9452-D02BFF014F81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96586260-C130-4ED3-9452-D02BFF014F81}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

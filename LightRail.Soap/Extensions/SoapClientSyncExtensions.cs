@@ -4,15 +4,6 @@ namespace LightRail.Soap;
 
 public static class SoapClientSyncExtensions
 {
-    /// <summary>
-    /// Posts an asynchronous message.
-    /// </summary>
-    /// <param name="client">Instance of SoapClient.</param>
-    /// <param name="endpoint">The endpoint.</param>
-    /// <param name="soapVersion">The version of SOAP</param>
-    /// <param name="body">The body of the SOAP message.</param>
-    /// <param name="header">The header of the SOAP message.</param>
-    /// <param name="action"></param>
     public static HttpResponseMessage Post(
         this ISoapClient client,
         Uri endpoint,
@@ -23,15 +14,7 @@ public static class SoapClientSyncExtensions
             => ResolveTask(() =>
                 client.PostAsync(endpoint, soapVersion, body, header, action));
 
-    /// <summary>
-    /// Posts an asynchronous message.
-    /// </summary>
-    /// <param name="client">Instance of SoapClient.</param>
-    /// <param name="endpoint">The endpoint.</param>
-    /// <param name="soapVersion">The version of SOAP</param>
-    /// <param name="bodies">The body of the SOAP message.</param>
-    /// <param name="header">The header of the SOAP message.</param>
-    /// <param name="action"></param>
+    
     public static HttpResponseMessage Post(
         this ISoapClient client,
         Uri endpoint,
@@ -41,16 +24,7 @@ public static class SoapClientSyncExtensions
         string? action = null)
             => ResolveTask(() =>
                 client.PostAsync(endpoint, soapVersion, bodies, header, action));
-
-    /// <summary>
-    /// Posts an asynchronous message.
-    /// </summary>
-    /// <param name="client">Instance of SoapClient.</param>
-    /// <param name="endpoint">The endpoint.</param>
-    /// <param name="soapVersion">The version of SOAP</param>
-    /// <param name="body">The body of the SOAP message.</param>
-    /// <param name="headers">The headers of the SOAP message.</param>
-    /// <param name="action"></param>
+    
     public static HttpResponseMessage Post(
         this ISoapClient client,
         Uri endpoint,

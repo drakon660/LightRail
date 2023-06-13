@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
+using Ardalis.Result;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LightRail.Soap;
@@ -10,10 +11,6 @@ public class SoapClient : ISoapClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SoapClient" /> class.
-    /// </summary>
-    /// <param name="IHttpClientFactory">Microsoft.Extensions.Http HttpClientFactory</param>
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
@@ -27,7 +24,7 @@ public class SoapClient : ISoapClient
         IEnumerable<XElement> bodies,
         IEnumerable<XElement>? headers = null,
         string? action = null,
-        CancellationToken cancellationToken = default(CancellationToken))
+        CancellationToken cancellationToken = default)
     {
         if (endpoint == null)
             throw new ArgumentNullException(nameof(endpoint));
@@ -64,19 +61,23 @@ public class SoapClient : ISoapClient
                     new NameValueHeaderValue("ActionParameter", $"\"{action}\""));
         }
 
-        string contentRaw = await content.ReadAsStringAsync(cancellationToken);
-        
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
         var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
 
-        if (response.Content.Headers.ContentType?.MediaType != messageConfiguration.MediaType)
-            throw new Exception("Response is not xml");    
-        
-        //var responseContent = await response.Content.ReadAsStringAsync();
-        
+        //result builder
         return response;
     }
+
+    // public async Task<TResponse> PostAsync<TResponse, TRequestMessage>(string endpoint, SoapVersion soapVersion,
+    //     TRequestMessage message, string? action = null, CancellationToken cancellationToken = default)
+    // {
+    //     var uri = new Uri(endpoint);
+    //
+    //     var response = await PostAsync(uri, soapVersion, message, action, cancellationToken);
+    //
+    //     return response;
+    // }
 
     #region Private Methods
 
@@ -107,4 +108,57 @@ public class SoapClient : ISoapClient
     }
 
     #endregion Private Methods
+}
+
+public class ResultFactory
+{
+    public static async Task<Result<string>> Create(HttpResponseMessage responseMessage, SoapVersion soapVersion)
+    {
+        var messageConfiguration = new SoapMessageConfiguration(soapVersion);
+
+        if (responseMessage.Content.Headers.ContentType?.MediaType != messageConfiguration.MediaType)
+            return Result.Error("Response is not xml");
+
+        var responseContent = await responseMessage.Content.ReadAsStreamAsync();
+        if (!responseMessage.IsSuccessStatusCode)
+        {
+            var (faultCode, faultString) = await ParseSoapFault(responseContent);
+            return Result.Error();
+        }
+
+        using StreamReader reader = new StreamReader(responseContent);
+            return Result.Success(await reader.ReadToEndAsync());
+    }
+
+    public static async Task<(string FaultCode, string FaultString)> ParseSoapFault(Stream responseContentStream,
+        CancellationToken cancellationToken = default)
+    {
+        XElement envelope = await XElement.LoadAsync(responseContentStream, LoadOptions.None, default);
+
+        XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
+        XNamespace faultNs = "http://schemas.microsoft.com/net/2005/12/windowscommunicationfoundation/dispatcher";
+
+        XElement faultCodeElement =
+            envelope.Descendants(soapNs + "Fault").Descendants(faultNs + "faultcode").FirstOrDefault();
+        XElement faultStringElement =
+            envelope.Descendants(soapNs + "Fault").Descendants(faultNs + "faultstring").FirstOrDefault();
+
+        if (faultCodeElement != null && faultStringElement != null)
+        {
+            string faultCode = faultCodeElement.Value;
+            string faultString = faultStringElement.Value;
+
+            return (faultCode, faultString);
+        }
+
+        throw new Exception("response xml not recognized");
+    }
+}
+
+public class MessageInitializer
+{
+    // public (IEnumerable<XElement> Body, IEnumerable<XElement> Header) Initialize<TMessage>(TMessage message)
+    // {
+    //     
+    // }
 }
