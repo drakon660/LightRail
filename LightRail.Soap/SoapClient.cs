@@ -1,6 +1,4 @@
 using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Xml.Linq;
 using Ardalis.Result;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,14 +8,12 @@ namespace LightRail.Soap;
 public class SoapClient : ISoapClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
-
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public SoapClient()
         => _httpClientFactory = DefaultHttpClientFactory();
-
-    /// <inheritdoc />
+    
     public async Task<HttpResponseMessage> PostAsync(
         Uri endpoint,
         SoapVersion soapVersion,
@@ -35,31 +31,35 @@ public class SoapClient : ISoapClient
         if (!bodies.Any())
             throw new ArgumentException("Bodies element cannot be empty", nameof(bodies));
 
+        var soapFactory = EnvelopeFactories.Get(soapVersion);
+
+        var content = soapFactory.Create(headers, bodies, action);
+        
         // Get configuration based on version
-        var messageConfiguration = new SoapMessageConfiguration(soapVersion);
-
-        // Get the envelope
-        var envelope = GetEnvelope(messageConfiguration);
-
-        // Add headers
-        if (headers != null && headers.Any())
-            envelope.Add(new XElement(messageConfiguration.Schema + "Header", headers));
-
-        // Add bodies
-        envelope.Add(new XElement(messageConfiguration.Schema + "Body", bodies));
-
-        // Get HTTP content
-        var content = new StringContent(envelope.ToString(), Encoding.UTF8, messageConfiguration.MediaType);
+        // var messageConfiguration = new SoapMessageConfiguration(soapVersion);
+        //
+        // // Get the envelope
+        // var envelope = GetEnvelope(messageConfiguration);
+        //
+        // // Add headers
+        // if (headers != null && headers.Any())
+        //     envelope.Add(new XElement(messageConfiguration.Schema + "Header", headers));
+        //
+        // // Add bodies
+        // envelope.Add(new XElement(messageConfiguration.Schema + "Body", bodies));
+        //
+        // // Get HTTP content
+        // var content = new StringContent(envelope.ToString(), Encoding.UTF8, messageConfiguration.MediaType);
 
         // Add SOAP action if any
-        if (action != null)
-        {
-            content.Headers.Add("SOAPAction", action);
-
-            if (messageConfiguration.SoapVersion == SoapVersion.Soap12)
-                content.Headers.ContentType!.Parameters.Add(
-                    new NameValueHeaderValue("ActionParameter", $"\"{action}\""));
-        }
+        // if (action != null)
+        // {
+        //     content.Headers.Add("SOAPAction", action);
+        //
+        //     if (messageConfiguration.SoapVersion == SoapVersion.Soap12)
+        //         content.Headers.ContentType!.Parameters.Add(
+        //             new NameValueHeaderValue("ActionParameter", $"\"{action}\""));
+        // }
 
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
@@ -68,16 +68,6 @@ public class SoapClient : ISoapClient
         //result builder
         return response;
     }
-
-    // public async Task<TResponse> PostAsync<TResponse, TRequestMessage>(string endpoint, SoapVersion soapVersion,
-    //     TRequestMessage message, string? action = null, CancellationToken cancellationToken = default)
-    // {
-    //     var uri = new Uri(endpoint);
-    //
-    //     var response = await PostAsync(uri, soapVersion, message, action, cancellationToken);
-    //
-    //     return response;
-    // }
 
     #region Private Methods
 
@@ -127,7 +117,7 @@ public class ResultFactory
         }
 
         using StreamReader reader = new StreamReader(responseContent);
-            return Result.Success(await reader.ReadToEndAsync());
+        return Result.Success(await reader.ReadToEndAsync());
     }
 
     public static async Task<(string FaultCode, string FaultString)> ParseSoapFault(Stream responseContentStream,
