@@ -11,8 +11,6 @@ public class SoapClient : ISoapClient
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private readonly ISoapEnvelopeFactory _soapFactory = EnvelopeFactories.Get(SoapVersion.Soap11);
-    
     public SoapClient()
         => _httpClientFactory = DefaultHttpClientFactory();
     
@@ -45,31 +43,6 @@ public class SoapClient : ISoapClient
         return response;
     }
     
-    public async Task<HttpResponseMessage> PostAsync2(
-        Uri endpoint,
-        IEnumerable<XElement> bodies,
-        IEnumerable<XElement> headers = null,
-        string action = null,
-        CancellationToken cancellationToken = default)
-    {
-        // if (endpoint == null)
-        //     throw new ArgumentNullException(nameof(endpoint));
-        //
-        // if (bodies == null)
-        //     throw new ArgumentNullException(nameof(bodies));
-        //
-        // if (!bodies.Any())
-        //     throw new ArgumentException("Bodies element cannot be empty", nameof(bodies));
-        
-        var content = _soapFactory.Create(headers, bodies, action);
-        
-        // Execute call
-        var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
-        var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
-        
-        //result builder
-        return response;
-    }
     
     private static IHttpClientFactory DefaultHttpClientFactory()
     {
