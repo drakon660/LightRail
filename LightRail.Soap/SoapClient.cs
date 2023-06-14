@@ -11,6 +11,8 @@ public class SoapClient : ISoapClient
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
+    private readonly ISoapEnvelopeFactory _soapFactory = EnvelopeFactories.Get(SoapVersion.Soap11);
+    
     public SoapClient()
         => _httpClientFactory = DefaultHttpClientFactory();
     
@@ -18,8 +20,8 @@ public class SoapClient : ISoapClient
         Uri endpoint,
         SoapVersion soapVersion,
         IEnumerable<XElement> bodies,
-        IEnumerable<XElement>? headers = null,
-        string? action = null,
+        IEnumerable<XElement> headers = null,
+        string action = null,
         CancellationToken cancellationToken = default)
     {
         if (endpoint == null)
@@ -31,56 +33,44 @@ public class SoapClient : ISoapClient
         if (!bodies.Any())
             throw new ArgumentException("Bodies element cannot be empty", nameof(bodies));
 
-        var soapFactory = EnvelopeFactories.Get(soapVersion);
+        ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion);
 
         var content = soapFactory.Create(headers, bodies, action);
         
-        // Get configuration based on version
-        // var messageConfiguration = new SoapMessageConfiguration(soapVersion);
-        //
-        // // Get the envelope
-        // var envelope = GetEnvelope(messageConfiguration);
-        //
-        // // Add headers
-        // if (headers != null && headers.Any())
-        //     envelope.Add(new XElement(messageConfiguration.Schema + "Header", headers));
-        //
-        // // Add bodies
-        // envelope.Add(new XElement(messageConfiguration.Schema + "Body", bodies));
-        //
-        // // Get HTTP content
-        // var content = new StringContent(envelope.ToString(), Encoding.UTF8, messageConfiguration.MediaType);
-
-        // Add SOAP action if any
-        // if (action != null)
-        // {
-        //     content.Headers.Add("SOAPAction", action);
-        //
-        //     if (messageConfiguration.SoapVersion == SoapVersion.Soap12)
-        //         content.Headers.ContentType!.Parameters.Add(
-        //             new NameValueHeaderValue("ActionParameter", $"\"{action}\""));
-        // }
-
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
         var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
-
+        
         //result builder
         return response;
     }
-
-    #region Private Methods
-
-    private static XElement GetEnvelope(SoapMessageConfiguration soapMessageConfiguration)
+    
+    public async Task<HttpResponseMessage> PostAsync2(
+        Uri endpoint,
+        IEnumerable<XElement> bodies,
+        IEnumerable<XElement> headers = null,
+        string action = null,
+        CancellationToken cancellationToken = default)
     {
-        return new
-            XElement(
-                soapMessageConfiguration.Schema + "Envelope",
-                new XAttribute(
-                    XNamespace.Xmlns + "soapenv",
-                    soapMessageConfiguration.Schema.NamespaceName));
+        // if (endpoint == null)
+        //     throw new ArgumentNullException(nameof(endpoint));
+        //
+        // if (bodies == null)
+        //     throw new ArgumentNullException(nameof(bodies));
+        //
+        // if (!bodies.Any())
+        //     throw new ArgumentException("Bodies element cannot be empty", nameof(bodies));
+        
+        var content = _soapFactory.Create(headers, bodies, action);
+        
+        // Execute call
+        var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
+        var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
+        
+        //result builder
+        return response;
     }
-
+    
     private static IHttpClientFactory DefaultHttpClientFactory()
     {
         var serviceProvider = new ServiceCollection();
@@ -96,8 +86,6 @@ public class SoapClient : ISoapClient
 
         return serviceProvider.BuildServiceProvider().GetService<IHttpClientFactory>()!;
     }
-
-    #endregion Private Methods
 }
 
 public class ResultFactory

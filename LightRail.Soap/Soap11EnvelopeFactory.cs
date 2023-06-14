@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
 
@@ -8,6 +7,7 @@ public class Soap11EnvelopeFactory : ISoapEnvelopeFactory
 {
     private const string Schema = "http://schemas.xmlsoap.org/soap/envelope/";
     private const string MediaType = "text/xml";
+    private const string SOAPAction = "SOAPAction";
     private static readonly XNamespace XSchema = Schema;
 
     public StringContent Create(IEnumerable<XElement> headers, IEnumerable<XElement> bodies, string action)
@@ -28,13 +28,7 @@ public class Soap11EnvelopeFactory : ISoapEnvelopeFactory
         var content = new StringContent(envelope.ToString(), Encoding.UTF8, MediaType);
         
         if (action != null)
-        {
-            content.Headers.Add("SOAPAction", action);
-
-            // if (_soapMessageConfiguration.SoapVersion == SoapVersion.Soap12)
-            //     content.Headers.ContentType!.Parameters.Add(
-            //         new NameValueHeaderValue("ActionParameter", $"\"{action}\""));
-        }
+            content.Headers.Add(SOAPAction, action);
 
         return content;
     }

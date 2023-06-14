@@ -61,7 +61,7 @@ public class SoapClientTest
         {
             new (ns.GetName("input"),new []
             {
-                new XElement("Id",1),
+                new XElement("Idsdsdsd",1),
                 new XElement("Query","test"),
             }),
             new (ns.GetName("complexInput"),new []
