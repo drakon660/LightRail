@@ -8,7 +8,7 @@ public class Soap11EnvelopeFactory : ISoapEnvelopeFactory
 {
     private readonly SoapMessageConfiguration _soapMessageConfiguration;
     private const string Schema = "http://schemas.xmlsoap.org/soap/envelope/";
-    private const string MediaType = "MediaType";
+    private const string MediaType = "text/xml";
 
     public Soap11EnvelopeFactory()
     {
