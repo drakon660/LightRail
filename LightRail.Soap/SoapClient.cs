@@ -1,4 +1,5 @@
 using System.Net;
+using System.Reflection;
 using System.Xml.Linq;
 using Ardalis.Result;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,7 +44,48 @@ public class SoapClient : ISoapClient
         return response;
     }
     
-    
+    public async Task<HttpResponseMessage> PostAsync(
+        Uri endpoint,
+        SoapVersion soapVersion,
+        string bodies,
+        string headers = null,
+        string action = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (endpoint == null)
+            throw new ArgumentNullException(nameof(endpoint));
+
+        if (bodies == null)
+            throw new ArgumentNullException(nameof(bodies));
+
+        if (!bodies.Any())
+            throw new ArgumentException("Bodies element cannot be empty", nameof(bodies));
+
+        ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion);
+
+        var content = soapFactory.Create(headers, bodies, action);
+        
+        // Execute call
+        var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
+        var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
+        
+        //result builder
+        return response;
+    }
+
+    public async Task<HttpResponseMessage> PostAsync<T>(
+        Uri endpoint,
+        SoapVersion soapVersion,
+        T message,
+        string action = null,
+        CancellationToken cancellationToken = default)
+    {
+        var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Instance);
+
+        //TODO
+        
+    }
+
     private static IHttpClientFactory DefaultHttpClientFactory()
     {
         var serviceProvider = new ServiceCollection();

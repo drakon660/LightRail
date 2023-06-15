@@ -38,4 +38,9 @@ public class Soap12EnvelopeFactory : ISoapEnvelopeFactory
      {
           throw new NotImplementedException();
      }
+
+     public StringContent Create(string headers, string bodies, string action)
+     {
+          throw new NotImplementedException();
+     }
 }

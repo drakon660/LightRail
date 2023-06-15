@@ -61,7 +61,7 @@ public class SoapClientTest
         {
             new (ns.GetName("input"),new []
             {
-                new XElement("Idsdsdsd",1),
+                new XElement("Id",1),
                 new XElement("Query","test"),
             }),
             new (ns.GetName("complexInput"),new []
@@ -84,6 +84,47 @@ public class SoapClientTest
                 action:"http://tempuri.org/INothingInputService/GetValues",
                 bodies: new []{ methodBody } );
 
+        Assert.Equal(HttpStatusCode.OK, actual.StatusCode);
+    }
+
+
+    [Fact]
+    public async Task Check_SoapClient_PostAsync_With_Raw_Data()
+    {
+        var soapClient = new SoapClient();
+
+        string bodies = """
+                           <tem:GetValues>        
+                            <tem:input>
+            
+                            <Id>1</Id>  
+            
+                            <Query>dwa</Query>
+                            </tem:input>
+         
+                     <tem:complexInput>
+            
+                    <Id>1</Id>
+            
+            <Query>
+               
+               <From>1</From>
+               
+               <Size>2</Size>
+            </Query>
+                    </tem:complexInput>
+                </tem:GetValues>
+
+            """;
+        string headers = "";
+        
+        var actual =
+            await soapClient.PostAsync(
+                new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
+                SoapVersion.Soap11,
+                action:"http://tempuri.org/INothingInputService/GetValues",
+                bodies: bodies, headers:headers );
+        
         Assert.Equal(HttpStatusCode.OK, actual.StatusCode);
     }
     //

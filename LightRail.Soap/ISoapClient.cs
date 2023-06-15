@@ -5,6 +5,14 @@ namespace LightRail.Soap;
 public interface ISoapClient
 {
     Task<HttpResponseMessage> PostAsync(Uri endpoint, SoapVersion soapVersion, IEnumerable<XElement> bodies,
-        IEnumerable<XElement>? headers = null, string? action = null,
+        IEnumerable<XElement> headers = null, string action = null,
+        CancellationToken cancellationToken = default);
+
+    Task<HttpResponseMessage> PostAsync(
+        Uri endpoint,
+        SoapVersion soapVersion,
+        string bodies,
+        string headers = null,
+        string action = null,
         CancellationToken cancellationToken = default);
 }
