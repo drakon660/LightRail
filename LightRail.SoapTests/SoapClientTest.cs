@@ -1,6 +1,7 @@
 using System.Net;
 using System.Xml;
 using System.Xml.Linq;
+using FluentAssertions;
 using LightRail.Soap;
 
 namespace LightRail.SoapTests;
@@ -53,41 +54,35 @@ public class SoapClientTest
     public async Task Check_If_Instance_Is_Created_Properly_With_GetValues()
     {
         var soapClient = new SoapClient();
-        var ns = XNamespace.Get("http://tempuri.org/");
 
-        var methodBody = new XElement(ns.GetName("GetValues"));
-
-        List<XElement> values = new List<XElement>()
-        {
-            new XElement("input", new []
-            {
-                new XElement("Id",1),
-                new XElement("Query","test"),
-            }),
-            new XElement("complexInput",new []
-            {
-                new XElement("Id",1),
-                new XElement("Query",new []
-                {
-                    new XElement("From",1),
-                    new XElement("Size",12)
-                }),
-            }),
-        };
+        string n = "http://tempuri.org/";
+        string operation = "GetNothingValues";
+        string action = "http://tempuri.org/INothingService/GetNothingValues";
         
-        methodBody.Add(values);
+        XElementSoapBuilder xmlSerializer = new XElementSoapBuilder();
+        var message = new SoapMessage();
+        message.Input = new Input(12, "dupa");
+        message.Value1 = 12;
+        
+        var result = xmlSerializer.Initialize(n,operation,message);
         
         var actual =
             await soapClient.PostAsync(
-                new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
+                new Uri("https://lightrail-2.azurewebsites.net/nothing.svc"),
                 SoapVersion.Soap11,
-                action:"http://tempuri.org/INothingInputService/GetValues",
-                bodies: new []{ methodBody } );
+                action:"http://tempuri.org/INothingService/GetNothingValues",
+                bodies: new [] { result } );
 
+        string content = await actual.Content.ReadAsStringAsync();
+
+        //var resultElement = XElement.Parse(content);
+        
+        //resultElement.Element()
+        
         Assert.Equal(HttpStatusCode.OK, actual.StatusCode);
     }
-
-
+    
+    
     [Fact]
     public async Task Check_SoapClient_PostAsync_With_Raw_Data()
     {
@@ -147,15 +142,13 @@ public class SoapClientTest
     //         );
     // }
 
-    public record Reponse();
-
-    public record SoapMessage(string Namespace, string OperationName, string Action) : ISoapMessage
+    public record SoapMessage : ISoapMessage
     {
         public Input Input { get; set; }
-        public ComplexInput ComplexInput { get; set; }
+        public int Value1 { get; set; }
     }
 
-    public record Input(int Id, string Query);
+    public record input(int Id, string Query);
     public record ComplexInput(int Id, Query Query);
     public record Query(int From, int Size);
 }

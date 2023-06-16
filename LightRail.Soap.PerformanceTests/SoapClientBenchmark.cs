@@ -3,7 +3,6 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
-using LightRail.WcfClient;
 
 namespace LightRail.Soap.PerformanceTests;
 
@@ -11,7 +10,7 @@ namespace LightRail.Soap.PerformanceTests;
 //[Config(typeof(Config))]
 public class SoapClientBenchmark
 {
-    private NothingInputServiceClient _wcfClient;
+    private LightRail.WcfClient.NothingInputServiceClient _wcfClient;
     private SoapClient _soapClient;
     private SoapClient _soapClient2;
 
@@ -20,7 +19,7 @@ public class SoapClientBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        _wcfClient = NothingInputServiceFactory.Create(WcfServiceUrl);
+        _wcfClient = LightRail.WcfClient.NothingInputServiceFactory.Create(WcfServiceUrl);
         _soapClient = new SoapClient();
         _soapClient2 = new SoapClient();
     }
@@ -32,7 +31,7 @@ public class SoapClientBenchmark
     //    
     // }
 
-    [Benchmark]
+    //[Benchmark]
     public async Task SoapClient()
     {
         var ns = XNamespace.Get("http://tempuri.org/");
@@ -67,7 +66,7 @@ public class SoapClientBenchmark
                 bodies: new []{methodBody} );
     }
 
-    [Benchmark]
+    //[Benchmark]
     public async Task SoapClientRawBody()
     {
         string bodies = """
@@ -104,14 +103,36 @@ public class SoapClientBenchmark
                 action:"http://tempuri.org/INothingInputService/GetValues",
                 bodies: bodies, headers:headers );
     }
-    
+
     [Benchmark]
+    public async Task SoapClientGeneric()
+    {
+        string n = "http://tempuri.org/";
+        string operation = "GetValues";
+        string action = "http://tempuri.org/INothingInputService/GetValues";
+        
+        XElementSoapBuilder xmlSerializer = new XElementSoapBuilder();
+        var message = new SoapMessage();
+        message.Input = new Input(12, "dupa");
+        message.ComplexInput = new ComplexInput(32, new Query(3, 6));
+
+        var result = xmlSerializer.Initialize(n,operation,message);
+        
+        var actual =
+            await _soapClient.PostAsync(
+                new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
+                SoapVersion.Soap11,
+                action:"http://tempuri.org/INothingInputService/GetValues",
+                bodies: new [] { result } );
+    }
+    
+    //[Benchmark]
     public async Task WcfClient()
     {
-        await _wcfClient.GetValuesAsync(new Input(){Id = 15, Query = "Sample Query"}, new ComplexInput()
+        await _wcfClient.GetValuesAsync(new LightRail.WcfClient.Input(){Id = 15, Query = "Sample Query"}, new LightRail.WcfClient.ComplexInput()
         {
             Id = 25,
-            Query = new ComplexQuery()
+            Query = new LightRail.WcfClient.ComplexQuery()
             {
                 From = 0,
                 Size = 100
@@ -137,5 +158,15 @@ public class SoapClientBenchmark
             // });
         }
     }
+    
+    public record SoapMessage : ISoapMessage
+    {
+        public Input Input { get; set; }
+        public ComplexInput ComplexInput { get; set; }
+    }
+    
+    public record Input(int Id, string Query);
+    public record ComplexInput(int Id, Query Query);
+    public record Query(int From, int Size);
 }
 

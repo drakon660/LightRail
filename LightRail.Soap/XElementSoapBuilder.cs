@@ -6,64 +6,74 @@ namespace LightRail.Soap;
 
 public class XElementSoapBuilder
 {
-    public (XElement Body, IEnumerable<XElement> Header) Initialize<TMessage>(TMessage message)
+    public XElement CreateEnvelope(string soapSchema, string schema, IDictionary<string,string> namespacesWithPrefixes)
     {
-        if (message is ISoapMessage soapMessage)
-        {
-            var ns = XNamespace.Get(soapMessage.Namespace);
-
-            var methodBody = new XElement(ns.GetName(soapMessage.OperationName));
-
-            var accessor = TypeAccessor.Create(typeof(TMessage));
-
-            List<XElement> xElements = new List<XElement>();
-            
-            foreach (var member in accessor.GetMembers())
-            {
-                var element = new XElement(member.Name);
-
-                if (ReflectionUtils.IsSimpleType(member.Type))
-                {
-                    var value = accessor[message, member.Name];
-                    element.Value = value.ToString();
-                }
-                
-                xElements.Add(element);
-            }
-
-            List<XElement> values = new List<XElement>()
-            {
-                new (ns.GetName("input"),new []
-                {
-                    new XElement("Id",1),
-                    new XElement("Query","test"),
-                }),
-                new (ns.GetName("complexInput"),new []
-                {
-                    new XElement("Id",1),
-                    new XElement("Query",new []
-                    {
-                        new XElement("From",1),
-                        new XElement("Size",12)
-                    }),
-                }),
-            };
+        XNamespace XSoapSchema = soapSchema;
+        XNamespace XSchema = schema;
         
-            methodBody.Add(values);
+        XElement envelope = new
+            XElement(
+                XSoapSchema + "Envelope",
+                new XAttribute(
+                    XNamespace.Xmlns + "soapenv",
+                    XSoapSchema.NamespaceName), new XAttribute(
+                    XNamespace.Xmlns + "tem",
+                    XSchema.NamespaceName));
+        
+        //namespacesWithPrefixes.Select(x=> new XAttribute(XNamespace.Xmlns + x.Value,))
+        
+        envelope.Add();
+        
+        return envelope;
+    }
+    
+    
+    public XElement Initialize<TMessage>(string nameSpace, string operationName,
+        TMessage message)
+    {
+        var ns = XNamespace.Get(nameSpace);
 
-            return (methodBody, null);
+        var methodBody = new XElement(ns.GetName(operationName));
+        XAttribute namespaceAttribute = new XAttribute(XNamespace.Xmlns + "tem", ns);
+        methodBody.Add(namespaceAttribute);
+        
+        var accessor = TypeAccessor.Create(typeof(TMessage));
+
+        List<XElement> xElements = new List<XElement>();
+
+        foreach (var member in accessor.GetMembers())
+        {
+            var value = accessor[message, member.Name];
+            
+            var element = GetValue(member.Name, member.Type, value);
+            element.Add(namespaceAttribute);
+            
+            xElements.Add(element);
         }
 
-        return (null, null);
+        methodBody.Add(xElements);
+
+        return methodBody;
     }
 
-    // public XElement GetValue(string name, Type type, object obj)
-    // {
-    //     var element = new XElement(name);
-    //
-    //     if (ReflectionUtils.ISimpleType(type))
-    //     {
-    //         element.Value = obj.ToString();
-    //     }
-    // }
+    public XElement GetValue(string name, Type type, object obj)
+    {
+        var element = new XElement(name);
+
+        if (ReflectionUtils.IsSimpleType(type))
+        {
+            element.Value = obj.ToString();
+        }
+        else
+        {
+            var accessor = TypeAccessor.Create(type);
+            foreach (var member in accessor.GetMembers())
+            {
+                var childElement = GetValue(member.Name, member.Type, accessor[obj, member.Name]);
+                element.Add(childElement);
+            }
+        }
+
+        return element;
+    }
 }

@@ -13,7 +13,7 @@ public class Soap11EnvelopeFactory : ISoapEnvelopeFactory
 
     private const string Envelope =
         "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tem=\"http://tempuri.org/\" >{0}<soapenv:Body>{1}</soapenv:Body></soapenv:Envelope>";
-    
+
     public StringContent Create(IEnumerable<XElement> headers, IEnumerable<XElement> bodies, string action)
     {
         XElement envelope = new
@@ -22,7 +22,6 @@ public class Soap11EnvelopeFactory : ISoapEnvelopeFactory
                 new XAttribute(
                     XNamespace.Xmlns + "soapenv",
                     XSchema.NamespaceName));
-
 
         if (headers != null && headers.Any())
             envelope.Add(new XElement(XSchema + "Header", headers));
