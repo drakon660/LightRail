@@ -8,8 +8,13 @@
 
     <ItemGroup>
       <PackageReference Include="Ardalis.Result" Version="7.1.0" />
+      <PackageReference Include="FastMember" Version="1.5.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LightRail\LightRail.csproj" />
     </ItemGroup>
 
 </Project>

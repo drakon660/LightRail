@@ -73,18 +73,16 @@ public class SoapClient : ISoapClient
         return response;
     }
 
-    public async Task<HttpResponseMessage> PostAsync<T>(
-        Uri endpoint,
-        SoapVersion soapVersion,
-        T message,
-        string action = null,
-        CancellationToken cancellationToken = default)
-    {
-        var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Instance);
-
-        //TODO
-        
-    }
+    // public async Task<HttpResponseMessage> PostAsync<T>(
+    //     Uri endpoint,
+    //     SoapVersion soapVersion,
+    //     T message,
+    //     string action = null,
+    //     CancellationToken cancellationToken = default) where T: ISoapMessage
+    // {
+    //
+    //         
+    // }
 
     private static IHttpClientFactory DefaultHttpClientFactory()
     {
@@ -146,12 +144,4 @@ public class ResultFactory
 
         throw new Exception("response xml not recognized");
     }
-}
-
-public class MessageInitializer
-{
-    // public (IEnumerable<XElement> Body, IEnumerable<XElement> Header) Initialize<TMessage>(TMessage message)
-    // {
-    //     
-    // }
 }

@@ -59,12 +59,12 @@ public class SoapClientTest
 
         List<XElement> values = new List<XElement>()
         {
-            new (ns.GetName("input"),new []
+            new XElement("input", new []
             {
                 new XElement("Id",1),
                 new XElement("Query","test"),
             }),
-            new (ns.GetName("complexInput"),new []
+            new XElement("complexInput",new []
             {
                 new XElement("Id",1),
                 new XElement("Query",new []
@@ -149,7 +149,7 @@ public class SoapClientTest
 
     public record Reponse();
 
-    public record SoapMessage()
+    public record SoapMessage(string Namespace, string OperationName, string Action) : ISoapMessage
     {
         public Input Input { get; set; }
         public ComplexInput ComplexInput { get; set; }

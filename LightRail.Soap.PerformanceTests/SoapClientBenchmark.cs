@@ -13,6 +13,7 @@ public class SoapClientBenchmark
 {
     private NothingInputServiceClient _wcfClient;
     private SoapClient _soapClient;
+    private SoapClient _soapClient2;
 
     private const string WcfServiceUrl = "http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc";
     
@@ -21,6 +22,7 @@ public class SoapClientBenchmark
     {
         _wcfClient = NothingInputServiceFactory.Create(WcfServiceUrl);
         _soapClient = new SoapClient();
+        _soapClient2 = new SoapClient();
     }
 
    
@@ -68,8 +70,6 @@ public class SoapClientBenchmark
     [Benchmark]
     public async Task SoapClientRawBody()
     {
-        var soapClient = new SoapClient();
-
         string bodies = """
                            <tem:GetValues>        
                             <tem:input>
@@ -98,7 +98,7 @@ public class SoapClientBenchmark
         string headers = "";
         
         var actual =
-            await soapClient.PostAsync(
+            await _soapClient.PostAsync(
                 new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
                 SoapVersion.Soap11,
                 action:"http://tempuri.org/INothingInputService/GetValues",
