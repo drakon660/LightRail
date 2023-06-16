@@ -1,6 +1,7 @@
 using System.Net;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using FluentAssertions;
 using LightRail.Soap;
 
@@ -59,7 +60,7 @@ public class SoapClientTest
         string operation = "GetNothingValues";
         string action = "http://tempuri.org/INothingService/GetNothingValues";
         
-        XElementSoapBuilder xmlSerializer = new XElementSoapBuilder();
+        SoapEnvelopeBuilder xmlSerializer = new SoapEnvelopeBuilder();
         var message = new SoapMessage();
         message.Input = new Input(12, "dupa");
         message.Value1 = 12;

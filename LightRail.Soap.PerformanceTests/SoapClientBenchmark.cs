@@ -111,7 +111,7 @@ public class SoapClientBenchmark
         string operation = "GetValues";
         string action = "http://tempuri.org/INothingInputService/GetValues";
         
-        XElementSoapBuilder xmlSerializer = new XElementSoapBuilder();
+        SoapEnvelopeBuilder xmlSerializer = new SoapEnvelopeBuilder();
         var message = new SoapMessage();
         message.Input = new Input(12, "dupa");
         message.ComplexInput = new ComplexInput(32, new Query(3, 6));
