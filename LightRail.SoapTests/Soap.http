@@ -1,0 +1,25 @@
+POST https://lightrail-2.azurewebsites.net/nothing.svc
+Content-Type: text/xml
+SOAPAction: http://tempuri.org/INothingService/GetNothingValues
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+
+    <soapenv:Body>
+
+        <tem:GetNothingValues>
+
+            <tem:input>
+
+                <Id>12</Id>
+
+                <Query>dupa</Query>
+
+            </tem:input>
+
+            <tem:Value1>12</tem:Value1>
+
+        </tem:GetNothingValues>
+
+    </soapenv:Body>
+
+</soapenv:Envelope>
