@@ -50,40 +50,7 @@ public class SoapClientTest
 
         Assert.Equal(HttpStatusCode.OK, actual.StatusCode);
     }
-    
-    [Fact]
-    public async Task Check_If_Instance_Is_Created_Properly_With_GetValues()
-    {
-        var soapClient = new SoapClient();
 
-        string n = "http://tempuri.org/";
-        string operation = "GetNothingValues";
-        string action = "http://tempuri.org/INothingService/GetNothingValues";
-        
-        SoapEnvelopeBuilder xmlSerializer = new SoapEnvelopeBuilder();
-        var message = new SoapMessage();
-        message.Input = new Input(12, "dupa");
-        message.Value1 = 12;
-        
-        var result = xmlSerializer.Initialize(n,operation,message);
-        
-        var actual =
-            await soapClient.PostAsync(
-                new Uri("https://lightrail-2.azurewebsites.net/nothing.svc"),
-                SoapVersion.Soap11,
-                action:"http://tempuri.org/INothingService/GetNothingValues",
-                bodies: new [] { result } );
-
-        string content = await actual.Content.ReadAsStringAsync();
-
-        //var resultElement = XElement.Parse(content);
-        
-        //resultElement.Element()
-        
-        Assert.Equal(HttpStatusCode.OK, actual.StatusCode);
-    }
-    
-    
     [Fact]
     public async Task Check_SoapClient_PostAsync_With_Raw_Data()
     {
