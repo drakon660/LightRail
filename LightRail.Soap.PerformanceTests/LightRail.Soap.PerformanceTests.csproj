@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\LightRail.Soap.Contracts\LightRail.Soap.Contracts.csproj" />
       <ProjectReference Include="..\LightRail.Soap\LightRail.Soap.csproj" />
       <ProjectReference Include="..\LightRail.WcfClient\LightRail.WcfClient.csproj" />
     </ItemGroup>

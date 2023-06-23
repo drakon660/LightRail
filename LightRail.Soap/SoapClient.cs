@@ -75,25 +75,25 @@ public class SoapClient : ISoapClient
         return response;
     }
 
-    public async Task<HttpResponseMessage> PostAsync<T>(
-        Uri endpoint,
-        SoapVersion soapVersion,
-        T message,
-        string action = null,
-        CancellationToken cancellationToken = default) where T: ISoapMessage
-    {
-        XNamespace tempuri = "http://tempuri.org/";
-        
-        _soapEnvelopeBuilder.BuildEnvelope(tempuri.ToString(), new Dictionary<string, string>()
-        {
-            { "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService", "tns" }
-        });
-
-        _soapEnvelopeBuilder.BuildBody("GetValues", message);
-
-        var envelope = _soapEnvelopeBuilder.GetEnvelope();
-    
-    }
+    // public async Task<HttpResponseMessage> PostAsync<T>(
+    //     Uri endpoint,
+    //     SoapVersion soapVersion,
+    //     T message,
+    //     string action = null,
+    //     CancellationToken cancellationToken = default) where T: ISoapMessage
+    // {
+    //     XNamespace tempuri = "http://tempuri.org/";
+    //     
+    //     _soapEnvelopeBuilder.BuildEnvelope(tempuri.ToString(), new Dictionary<string, string>()
+    //     {
+    //         { "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService", "tns" }
+    //     });
+    //
+    //     _soapEnvelopeBuilder.BuildBody("GetValues", message);
+    //
+    //     var envelope = _soapEnvelopeBuilder.GetEnvelope();
+    //
+    // }
 
     private static IHttpClientFactory DefaultHttpClientFactory()
     {

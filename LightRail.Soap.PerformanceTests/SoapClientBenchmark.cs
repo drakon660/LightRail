@@ -105,26 +105,26 @@ public class SoapClientBenchmark
                 bodies: bodies, headers:headers );
     }
 
-    [Benchmark]
-    public async Task SoapClientGeneric()
-    {
-        string n = "http://tempuri.org/";
-        string operation = "GetValues";
-        string action = "http://tempuri.org/INothingInputService/GetValues";
-
-
-        var message = new SoapMessage
-        {
-            Input = new Input { Id = 1, Query = "dupa" }, 
-            ComplexInput = new ComplexInput(1, new Query(23,23))
-        };
-        var actual =
-            await _soapClient.PostAsync<SoapMessage>(
-                new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
-                SoapVersion.Soap11,
-                action:"http://tempuri.org/INothingInputService/GetValues",
-                );
-    }
+    // [Benchmark]
+    // public async Task SoapClientGeneric()
+    // {
+    //     string n = "http://tempuri.org/";
+    //     string operation = "GetValues";
+    //     string action = "http://tempuri.org/INothingInputService/GetValues";
+    //
+    //
+    //     var message = new SoapMessage
+    //     {
+    //         Input = new Input { Id = 1, Query = "dupa" }, 
+    //         ComplexInput = new ComplexInput(1, new Query(23,23))
+    //     };
+    //     var actual =
+    //         await _soapClient.PostAsync<SoapMessage>(
+    //             new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
+    //             SoapVersion.Soap11,
+    //             action:"http://tempuri.org/INothingInputService/GetValues",
+    //             );
+    // }
     
     //[Benchmark]
     public async Task WcfClient()
