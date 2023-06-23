@@ -80,7 +80,40 @@ public class SoapMessageBuilderTests
         result.Should().BeEquivalentTo(expectedSoap);
         envelope.Should().NotBeNull();
     }
+    
+    [Fact]
+    public void Test_SoapMessageBuildr_Create_Soap_Envelope_Better()
+    {
+        XNamespace tempuri = "http://tempuri.org/";
+        SoapEnvelopeBuilder2 envelopeBuilder = new();
+        
+        var envelope = envelopeBuilder.GetEnvelope(tempuri.ToString(), "GetValues", new SoapMessage
+        {
+            Input = new Input { Id = 1, Query = "dupa" },
+            //ComplexInput = new ComplexInput(1, new Query(23,23))
+        });
 
+        string expectedSoap = """                                   
+                                   <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:tns="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService">
+                                  <tem:GetValues>
+                                  <tem:input>
+                                    <tns:Id>1</tns:Id>
+                  
+                                    <tns:Query>dupa</tns:Query>
+                
+                                    </tem:input>
+          
+                                    </tem:GetValues>
+    
+                                    </soapenv:Envelope>        
+                                 """;
+
+        string result = RemoveWhitespace(envelope.ToString());
+        expectedSoap = RemoveWhitespace(expectedSoap);
+        result.Should().BeEquivalentTo(expectedSoap);
+        envelope.Should().NotBeNull();
+    }
+   
     public static string RemoveWhitespace(string input)
     {
         return Regex.Replace(input, @"\s+", string.Empty);
