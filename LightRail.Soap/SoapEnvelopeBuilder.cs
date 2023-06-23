@@ -45,7 +45,6 @@ public class SoapEnvelopeBuilder
     public void BuildBody<TSoapMessage>(string operationName, TSoapMessage message)
     {
         XElement operation = new XElement(_xOperationSchema + operationName);
-            //new XAttribute(XNamespace.Xmlns + _operationPrefix, _xOperationSchema.NamespaceName));
 
         var accessor = TypeAccessor.Create(typeof(TSoapMessage));
 

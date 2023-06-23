@@ -36,6 +36,13 @@ public class Soap11EnvelopeFactory : ISoapEnvelopeFactory
         return content;
     }
 
+    public StringContent Create(XElement envelope, string action)
+    {
+        var content = new StringContent(envelope.ToString(), Encoding.UTF8, MediaType);
+        content.Headers.Add(SOAPAction, action);
+        return content;
+    }
+
     public StringContent Create(string headers, string bodies, string action)
     {
         var soapBuilder = StringBuilderCache.Acquire();

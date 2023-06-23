@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
@@ -104,27 +105,26 @@ public class SoapClientBenchmark
                 bodies: bodies, headers:headers );
     }
 
-    // [Benchmark]
-    // public async Task SoapClientGeneric()
-    // {
-    //     string n = "http://tempuri.org/";
-    //     string operation = "GetValues";
-    //     string action = "http://tempuri.org/INothingInputService/GetValues";
-    //     
-    //     SoapEnvelopeBuilder xmlSerializer = new SoapEnvelopeBuilder();
-    //     var message = new SoapMessage();
-    //     message.Input = new Input(12, "dupa");
-    //     message.ComplexInput = new ComplexInput(32, new Query(3, 6));
-    //
-    //     var result = xmlSerializer.BuildEnvelope(n, );
-    //     
-    //     var actual =
-    //         await _soapClient.PostAsync(
-    //             new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
-    //             SoapVersion.Soap11,
-    //             action:"http://tempuri.org/INothingInputService/GetValues",
-    //             bodies: new [] { result } );
-    // }
+    [Benchmark]
+    public async Task SoapClientGeneric()
+    {
+        string n = "http://tempuri.org/";
+        string operation = "GetValues";
+        string action = "http://tempuri.org/INothingInputService/GetValues";
+
+
+        var message = new SoapMessage
+        {
+            Input = new Input { Id = 1, Query = "dupa" }, 
+            ComplexInput = new ComplexInput(1, new Query(23,23))
+        };
+        var actual =
+            await _soapClient.PostAsync<SoapMessage>(
+                new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
+                SoapVersion.Soap11,
+                action:"http://tempuri.org/INothingInputService/GetValues",
+                );
+    }
     
     //[Benchmark]
     public async Task WcfClient()
@@ -161,12 +161,24 @@ public class SoapClientBenchmark
     
     public record SoapMessage : ISoapMessage
     {
+        [SoapAttribute(AttributeName = "input")]
         public Input Input { get; set; }
+
+        [SoapAttribute(AttributeName = "complexInput")]
         public ComplexInput ComplexInput { get; set; }
     }
-    
-    public record Input(int Id, string Query);
+
+    public record Input
+    {
+        [SoapAttribute(Namespace = "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService")]
+        public int Id { get; init; }
+
+        [SoapAttribute(Namespace = "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService")]
+        public string Query { get; init; }
+    };
+
     public record ComplexInput(int Id, Query Query);
+
     public record Query(int From, int Size);
 }
 
