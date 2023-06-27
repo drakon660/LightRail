@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using FastMember;
@@ -18,8 +19,9 @@ public class SoapEnvelopeBuilder2
     private XElement _envelope;
 
     private static Func<Member, SoapAttributeAttribute> _getSoapAttribute = (member)
-        => (SoapAttributeAttribute)member.GetAttribute(typeof(SoapAttributeAttribute), false);
+        => (SoapAttributeAttribute)member.GetAttribute(typeof(SoapAttributeAttribute), true);
 
+    
     public void BuildEnvelope(XNamespace operationSchema)
     {
         _xOperationSchema = operationSchema;
@@ -39,6 +41,10 @@ public class SoapEnvelopeBuilder2
 
     protected XElement BuildBody<TSoapMessage>(string operationName, TSoapMessage message)
     {
+        var attributes = typeof(TSoapMessage).GetProperties()
+            .Select(x=>(x.Name, Attribute: x.GetCustomAttribute(typeof(SoapAttributeAttribute))))
+            .ToDictionary((x)=>x.Name, y => (SoapAttributeAttribute)y.Attribute);
+
         XElement operation = new XElement(_xOperationSchema + operationName);
 
         var accessor = TypeAccessor.Create(typeof(TSoapMessage));
@@ -51,12 +57,12 @@ public class SoapEnvelopeBuilder2
             if (value is null)
                 continue;
         
-            // var soapAttribute = _getSoapAttribute(member);
+            // var soapAttribute = attributes[member.Name];
             //
             // string name = !string.IsNullOrEmpty(soapAttribute?.AttributeName)
             //     ? soapAttribute.AttributeName
             //     : member.Name;
-        
+            //
             var element = GetValue(member.Name, member.Type, value, _xOperationSchema);
         
             if (element is not null)
@@ -75,12 +81,12 @@ public class SoapEnvelopeBuilder2
 
         XElement operation = BuildBody(operationName, message);
 
-        // foreach (var namespacesWithPrefix in _namespaces)
-        // {
-        //     XNamespace additionalNamespace = namespacesWithPrefix;
-        //     _envelope.Add(new XAttribute(XNamespace.Xmlns + "tns",
-        //         additionalNamespace.NamespaceName));
-        // }
+        foreach (var namespacesWithPrefix in _namespaces)
+        {
+            XNamespace additionalNamespace = namespacesWithPrefix;
+            _envelope.Add(new XAttribute(XNamespace.Xmlns + "tns",
+                additionalNamespace.NamespaceName));
+        }
 
         _envelope.Add(operation);
 
