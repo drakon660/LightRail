@@ -5,4 +5,4 @@
 using BenchmarkDotNet.Running;
 using LightRail.Soap.PerformanceTests;
 
-BenchmarkRunner.Run<SoapClientBenchmark>();
+BenchmarkRunner.Run<SoapBuilderBenchmark>();

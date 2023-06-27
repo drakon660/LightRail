@@ -109,14 +109,4 @@ public class SoapClientTest
     //             message: soapMessage
     //         );
     // }
-
-    public record SoapMessage : ISoapMessage
-    {
-        public Input Input { get; set; }
-        public int Value1 { get; set; }
-    }
-
-    public record input(int Id, string Query);
-    public record ComplexInput(int Id, Query Query);
-    public record Query(int From, int Size);
 }

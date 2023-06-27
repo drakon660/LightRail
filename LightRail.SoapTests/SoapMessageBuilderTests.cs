@@ -90,7 +90,7 @@ public class SoapMessageBuilderTests
         var envelope = envelopeBuilder.GetEnvelope(tempuri.ToString(), "GetValues", new SoapMessage
         {
             Input = new Input { Id = 1, Query = "dupa" },
-            //ComplexInput = new ComplexInput(1, new Query(23,23))
+            ComplexInput = new ComplexInput(1, new Query(23,23))
         });
 
         string expectedSoap = """                                   
@@ -117,6 +117,44 @@ public class SoapMessageBuilderTests
     public static string RemoveWhitespace(string input)
     {
         return Regex.Replace(input, @"\s+", string.Empty);
+    }
+
+    [Fact]
+    public void RawXElment_Soap()
+    {
+        XNamespace SoapSchema = "http://schemas.xmlsoap.org/soap/envelope/";
+        
+        var ns = XNamespace.Get("http://tempuri.org/");
+        
+        var envelope = new XElement(SoapSchema + "Envelope", new XAttribute(
+            XNamespace.Xmlns + "soapenv", SoapSchema.NamespaceName));
+
+        envelope.Add(new XAttribute(
+            XNamespace.Xmlns + "tns",
+            ns.NamespaceName));
+        
+        var methodBody = new XElement(ns.GetName("GetValues"));
+
+        List<XElement> values = new List<XElement>()
+        {
+            new (ns.GetName("input"), new [] 
+            {
+                new XElement("Id",1),
+                new XElement("Query","test"),
+            }),
+            new (ns.GetName("complexInput"), new []
+            {
+                new XElement("Id",1),
+                new XElement("Query", new []
+                {
+                    new XElement("From",1),
+                    new XElement("Size",12)
+                }),
+            }),
+        };
+        
+        methodBody.Add(values);
+        envelope.Add(methodBody);
     }
 }
 
