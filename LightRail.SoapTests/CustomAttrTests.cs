@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Xml.Serialization;
+using LightRail.Soap.Contracts;
 
 namespace LightRail.SoapTests;
 

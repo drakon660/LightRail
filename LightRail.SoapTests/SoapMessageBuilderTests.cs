@@ -1,8 +1,11 @@
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using FluentAssertions;
+using LightRail.Reflection;
 using LightRail.Soap;
+using LightRail.Soap.Contracts;
 
 namespace LightRail.SoapTests;
 
@@ -80,17 +83,32 @@ public class SoapMessageBuilderTests
         result.Should().BeEquivalentTo(expectedSoap);
         envelope.Should().NotBeNull();
     }
+
+    [Fact]
+    public void Test_ReflectionUtils_GetCustomAttribute()
+    {
+        //todo dodac rekurencyjne zbieranie attrybutow
+        var attributes =
+            ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
+
+        attributes.Count.Should().Be(5);
+    }
     
     [Fact]
     public void Test_SoapMessageBuildr_Create_Soap_Envelope_Better()
     {
         XNamespace tempuri = "http://tempuri.org/";
-        SoapEnvelopeBuilder2 envelopeBuilder = new();
+        
+        //todo dodac rekurencyjne zbieranie attrybutow
+        var attributes =
+            ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
+        
+        SoapEnvelopeBuilder2 envelopeBuilder = new(attributes);
         
         var envelope = envelopeBuilder.GetEnvelope(tempuri.ToString(), "GetValues", new SoapMessage
         {
             Input = new Input { Id = 1, Query = "dupa" },
-            ComplexInput = new ComplexInput(1, new Query(23,23))
+            //ComplexInput = new ComplexInput(1, new Query(23,23))
         });
 
         string expectedSoap = """                                   
@@ -158,26 +176,3 @@ public class SoapMessageBuilderTests
     }
 }
 
-public record Reponse();
-
-public record SoapMessage : ISoapMessage
-{
-    [SoapAttribute(AttributeName = "input")]
-    public Input Input { get; set; }
-
-    [SoapAttribute(AttributeName = "complexInput")]
-    public ComplexInput ComplexInput { get; set; }
-}
-
-public record Input
-{
-    [SoapAttribute(Namespace = "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService")]
-    public int Id { get; init; }
-
-    [SoapAttribute(Namespace = "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService")]
-    public string Query { get; init; }
-};
-
-public record ComplexInput(int Id, Query Query);
-
-public record Query(int From, int Size);

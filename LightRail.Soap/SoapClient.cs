@@ -1,5 +1,4 @@
 using System.Net;
-using System.Reflection;
 using System.Xml.Linq;
 using Ardalis.Result;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +11,7 @@ public class SoapClient : ISoapClient
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private static SoapEnvelopeBuilder _soapEnvelopeBuilder = new SoapEnvelopeBuilder();
+    private static SoapEnvelopeBuilder2 _soapEnvelopeBuilder = new (null);
     
     public SoapClient()
         => _httpClientFactory = DefaultHttpClientFactory();
@@ -84,15 +83,11 @@ public class SoapClient : ISoapClient
     // {
     //     XNamespace tempuri = "http://tempuri.org/";
     //     
-    //     _soapEnvelopeBuilder.BuildEnvelope(tempuri.ToString(), new Dictionary<string, string>()
-    //     {
-    //         { "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService", "tns" }
-    //     });
+    //     _soapEnvelopeBuilder.BuildEnvelope(tempuri);
+    //     
+    //     var envelope = _soapEnvelopeBuilder.GetEnvelope(tempuri,"", message);
     //
-    //     _soapEnvelopeBuilder.BuildBody("GetValues", message);
-    //
-    //     var envelope = _soapEnvelopeBuilder.GetEnvelope();
-    //
+    //     return await PostAsync(endpoint, SoapVersion.Soap11, envelope, null, action, cancellationToken);
     // }
 
     private static IHttpClientFactory DefaultHttpClientFactory()

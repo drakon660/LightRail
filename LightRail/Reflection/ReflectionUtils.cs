@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection.Emit;
@@ -22,11 +23,11 @@ namespace LightRail.Reflection
         /// <typeparam name="T"></typeparam>
         /// <param name="memberInfo">The member info.</param>
         /// <returns></returns>
-        public static T GetCustomAttribute<T>(MemberInfo memberInfo)
-            where T : class
-        {
-            return GetCustomAttribute<T>(memberInfo, false);
-        }
+        // public static T GetCustomAttribute<T>(MemberInfo memberInfo)
+        //     where T : class
+        // {
+        //     return GetCustomAttribute<T>(memberInfo, false);
+        // }
 
         /// <summary>
         /// Gets the custom attribute.
@@ -34,10 +35,41 @@ namespace LightRail.Reflection
         /// <typeparam name="T"></typeparam>
         /// <param name="parameterInfo">The parameter info.</param>
         /// <returns></returns>
-        public static T GetCustomAttribute<T>(ParameterInfo parameterInfo)
-            where T : class
+        // public static T GetCustomAttribute<T>(ParameterInfo parameterInfo)
+        //     where T : class
+        // {
+        //     return GetCustomAttribute<T>(parameterInfo, false);
+        // }
+        public static Dictionary<K, V> Merge<K, V>(IEnumerable<Dictionary<K, V>> dictionaries)
         {
-            return GetCustomAttribute<T>(parameterInfo, false);
+            return dictionaries.SelectMany(x => x)
+                .ToDictionary(x => x.Key, y => y.Value);
+        }
+
+        public static void GetCustomAttribute<T>(in PropertyInfo propertyInfo, ref IDictionary<string, T> map)
+            where T : Attribute
+        {
+            var attribute = propertyInfo.GetCustomAttribute<T>();
+            if (attribute is not null)
+                map.Add($"{propertyInfo.DeclaringType}_{propertyInfo.Name}", attribute);
+
+            if (IsSimpleType(propertyInfo.PropertyType)) return;
+            foreach (var internalPropertyInfo in propertyInfo.PropertyType.GetProperties())
+            {
+                GetCustomAttribute<T>(internalPropertyInfo, ref map);
+            }
+        }
+
+        public static IReadOnlyDictionary<string, T> GetCustomAttributes<T>(in Type type) where T : Attribute
+        {
+            IDictionary<string, T> customAttributes = new Dictionary<string, T>();
+
+            foreach (var propertyInfo in type.GetProperties())
+            {
+                GetCustomAttribute(propertyInfo, ref customAttributes);
+            }
+
+            return customAttributes.AsReadOnly();
         }
 
         /// <summary>
@@ -144,9 +176,9 @@ namespace LightRail.Reflection
                 {
                     ParameterInfo[] parameterInfos = methodInfo.GetParameters();
 
-                    if(parameters == null)
+                    if (parameters == null)
                         return methodInfo;
-                    
+
                     if (parameterInfos.Length != parameters.Count)
                     {
                         continue;
@@ -192,7 +224,8 @@ namespace LightRail.Reflection
         /// <param name="methodName">Name of the method.</param>
         /// <param name="parameters">The parameters.</param>
         /// <returns></returns>
-        public static object InvokeMethod(object @object, string methodName, IReadOnlyDictionary<string, MethodInputParameter> parameters)
+        public static object InvokeMethod(object @object, string methodName,
+            IReadOnlyDictionary<string, MethodInputParameter> parameters)
         {
             return InvokeMethod(@object, methodName, BindingFlags.Instance | BindingFlags.Public, parameters);
         }
@@ -216,13 +249,13 @@ namespace LightRail.Reflection
             Type objectType = @object.GetType();
             MethodInfo methodInfo = GetMethodByName(objectType, methodName,
                 parameters?.ToDictionary(x => x.Key, y => y.Value.Type));
-            
+
             if (methodInfo == null)
             {
-                methodInfo = GetMethodByName(objectType, methodName,new Dictionary<string, Type>());
-                if(methodInfo == null)  
+                methodInfo = GetMethodByName(objectType, methodName, new Dictionary<string, Type>());
+                if (methodInfo == null)
                     throw new ReflectionUtilsException(String.Format("'{0}' method of '{1}' type couldn't be found",
-                    methodName, objectType.AssemblyQualifiedName));
+                        methodName, objectType.AssemblyQualifiedName));
             }
 
             return InvokeMethod(methodInfo, @object, BindingFlags.Instance | BindingFlags.Public, parameters);
@@ -263,10 +296,11 @@ namespace LightRail.Reflection
             }
 
             ParameterInfo[] parameterInfos = methodInfo.GetParameters();
-            
+
             if (parameters == null)
             {
-                return methodInfo.Invoke(@object, bindingFlags, null, new object[parameterInfos.Length], CultureInfo.CurrentCulture);
+                return methodInfo.Invoke(@object, bindingFlags, null, new object[parameterInfos.Length],
+                    CultureInfo.CurrentCulture);
                 //throw new ArgumentNullException("parameters");
             }
 
@@ -288,7 +322,8 @@ namespace LightRail.Reflection
                         parameterInfo.Name, methodInfo));
                 }
 
-                arguments[parameterInfo.Position] = ConversionUtils.ChangeType(methodInputParameter.Value, methodInputParameter.Type);
+                arguments[parameterInfo.Position] =
+                    ConversionUtils.ChangeType(methodInputParameter.Value, methodInputParameter.Type);
             }
 
             return methodInfo.Invoke(@object, bindingFlags, null, arguments, CultureInfo.CurrentCulture);
@@ -369,7 +404,8 @@ namespace LightRail.Reflection
         public static IReadOnlyList<Method> GetMethodsDefinition(object @object)
         {
             //TODO skip method from base class
-            MethodInfo[] methodsInfo = @object.GetType().GetMethods().Where(x=>!methodsToFilter.Contains(x.Name)).ToArray();
+            MethodInfo[] methodsInfo =
+                @object.GetType().GetMethods().Where(x => !methodsToFilter.Contains(x.Name)).ToArray();
             List<Method> methods = new List<Method>(methodsInfo.Length);
 
             for (int i = 0; i < methodsInfo.Length; i++)
@@ -383,27 +419,27 @@ namespace LightRail.Reflection
         public static IReadOnlyList<Method> GetMethodsDefinition(Type type)
         {
             //TODO skip method from base class
-            MethodInfo[] methodsInfo = type.GetMethods().Where(x=>!methodsToFilter.Contains(x.Name)).ToArray();
+            MethodInfo[] methodsInfo = type.GetMethods().Where(x => !methodsToFilter.Contains(x.Name)).ToArray();
             List<Method> methods = new List<Method>(methodsInfo.Length);
 
             for (int i = 0; i < methodsInfo.Length; i++)
-            { 
+            {
                 //var map = type.GetInterfaceMap(methodsInfo[i].DeclaringType);
                 methods.Add(GetMethodDefinition(methodsInfo[i]));
             }
 
             return methods.AsReadOnly();
         }
-        
+
         public static IReadOnlyList<Method> GetMethodsDefinition(Type type, string interfaceName)
         {
             var @interface = type.GetInterface(interfaceName);
-            
+
             InterfaceMapping map = type.GetInterfaceMap(@interface);
-            
+
             //TODO skip method from base class
             MethodInfo[] methodsInfo = map.InterfaceMethods;
-            
+
             List<Method> methods = new List<Method>(methodsInfo.Length);
 
             for (int i = 0; i < methodsInfo.Length; i++)
@@ -558,7 +594,7 @@ namespace LightRail.Reflection
                 }
             }
         }
-        
+
         public static Type CreateType(string typeName, IReadOnlyDictionary<string, Type> props)
         {
             var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Dtos"), AssemblyBuilderAccess.Run);
@@ -610,9 +646,9 @@ namespace LightRail.Reflection
                 setterMethod.LoadArgument(1);
                 setterMethod.StoreField(getBackingField());
                 setterMethod.Return();
-                
+
                 var setter = setterMethod.CreateMethod();
-                
+
                 propBuilder.SetSetMethod(setter);
             }
 
@@ -620,16 +656,17 @@ namespace LightRail.Reflection
 
             return destinationType;
         }
+
         public static object CreateInstance(Type type)
         {
             return Activator.CreateInstance(type);
         }
-        
+
         public static object CreateInstance(ConstructorInfo constructorInfo)
         {
             return constructorInfo.Invoke(new object[0]);
         }
-        
+
         // public static Func<object> CreateActivator(Type type)
         // {
         //     return Expression.Lambda<Func<object>>(Expression.New(type)).CompileFast();
@@ -652,7 +689,7 @@ namespace LightRail.Reflection
         {
             return instance.GetType().GetProperty(propertyName).GetValue(instance);
         }
-        
+
         public static Type FromString(string type)
         {
             return type switch
@@ -701,7 +738,7 @@ namespace LightRail.Reflection
 
         public static Type Merge(string name, IEnumerable<Reflection.Parameter> types)
         {
-            return CreateType(name, types.ToDictionary(x=>x.Name, y=>y.Type));
+            return CreateType(name, types.ToDictionary(x => x.Name, y => y.Type));
         }
     }
 }

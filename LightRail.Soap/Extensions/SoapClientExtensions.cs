@@ -1,4 +1,5 @@
 ﻿using System.Xml.Linq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LightRail.Soap;
 
@@ -55,5 +56,13 @@ public static class SoapClientExtensions
             headers,
             action,
             cancellationToken);
+    }
+
+
+    public static IServiceCollection AddSoapClient(this IServiceCollection serviceCollection)
+    {
+        serviceCollection.AddSingleton<SoapEnvelopeBuilder2>();
+        
+        return serviceCollection;
     }
 }

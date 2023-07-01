@@ -20,6 +20,10 @@ public record Input
     public string Query { get; init; }
 };
 
-public record ComplexInput(int Id, Query Query);
+public record ComplexInput
+{
+    [SoapAttribute(Namespace = "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService")]
+    public int Id { get; init; }     
+};
 
 public record Query(int From, int Size);

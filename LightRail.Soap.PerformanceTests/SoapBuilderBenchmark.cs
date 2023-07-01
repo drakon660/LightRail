@@ -1,4 +1,6 @@
+using System.Reflection;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
@@ -15,7 +17,11 @@ public class SoapBuilderBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        _envelopeBuilder = new();
+        var attributes = typeof(SoapMessage).GetProperties()
+            .Select(x=>(x.Name, Attribute: x.GetCustomAttribute(typeof(SoapAttributeAttribute))))
+            .ToDictionary((x)=>x.Name, y => (SoapAttributeAttribute)y.Attribute);
+
+        _envelopeBuilder = new(attributes);
     }
 
     [Benchmark]
@@ -64,7 +70,7 @@ public class SoapBuilderBenchmark
         var envelope = _envelopeBuilder.GetEnvelope(tempuri, "GetValues", new SoapMessage
         {
             Input = new Input { Id = 1, Query = "dupa" },
-            ComplexInput = new ComplexInput(1, new Query(23,23))
+            ComplexInput = new ComplexInput{ Id= 1}
         });
     }
     
