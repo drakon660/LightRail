@@ -58,7 +58,6 @@ public class SoapMessageBuilderTests
     {
         XNamespace tempuri = "http://tempuri.org/";
         
-        //todo dodac rekurencyjne zbieranie attrybutow
         var attributes =
             ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
         
@@ -71,12 +70,12 @@ public class SoapMessageBuilderTests
         });
 
         string expectedSoap = """                                   
-                                   <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:tns="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService">
+                                   <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:Int="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService">
                                   <tem:GetValues>
                                   <tem:input>
-                                    <tns:Id>1</tns:Id>
+                                    <Int:Id>1</Int:Id>
                   
-                                    <tns:Query>dupa</tns:Query>
+                                    <Int:Query>dupa</Int:Query>
                 
                                     </tem:input>
           

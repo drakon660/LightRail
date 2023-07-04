@@ -8,14 +8,15 @@ namespace LightRail.Soap;
 public class SoapClient : ISoapClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
+
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private static SoapEnvelopeBuilder _soapEnvelopeBuilder = new (null);
-    
+    private static SoapEnvelopeBuilder _soapEnvelopeBuilder = new(null);
+
     public SoapClient()
         => _httpClientFactory = DefaultHttpClientFactory();
-    
+
     public async Task<HttpResponseMessage> PostAsync(
         Uri endpoint,
         SoapVersion soapVersion,
@@ -36,15 +37,15 @@ public class SoapClient : ISoapClient
         ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion);
 
         var content = soapFactory.Create(headers, bodies, action);
-        
+
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
         var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
-        
+
         //result builder
         return response;
     }
-    
+
     public async Task<HttpResponseMessage> PostAsync(
         Uri endpoint,
         SoapVersion soapVersion,
@@ -65,30 +66,30 @@ public class SoapClient : ISoapClient
         ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion);
 
         var content = soapFactory.Create(headers, bodies, action);
-        
+
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
         var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
-        
+
         //result builder
         return response;
     }
 
-    // public async Task<HttpResponseMessage> PostAsync<T>(
-    //     Uri endpoint,
-    //     SoapVersion soapVersion,
-    //     T message,
-    //     string action = null,
-    //     CancellationToken cancellationToken = default) where T: ISoapMessage
-    // {
-    //     XNamespace tempuri = "http://tempuri.org/";
-    //     
-    //     _soapEnvelopeBuilder.BuildEnvelope(tempuri);
-    //     
-    //     var envelope = _soapEnvelopeBuilder.GetEnvelope(tempuri,"", message);
-    //
-    //     return await PostAsync(endpoint, SoapVersion.Soap11, envelope, null, action, cancellationToken);
-    // }
+    public async Task<HttpResponseMessage> PostAsync<T>(
+        Uri endpoint,
+        SoapVersion soapVersion,
+        T message,
+        string operationName,
+        string action = null,
+        CancellationToken cancellationToken = default) where T : ISoapMessage
+    {
+        XNamespace tempuri = "http://tempuri.org/";
+
+        var envelope = _soapEnvelopeBuilder.GetEnvelope(tempuri, operationName, message);
+
+        return await PostAsync(endpoint: endpoint, soapVersion: soapVersion, action: action,
+            cancellationToken: cancellationToken, bodies: new [] { envelope });
+    }
 
     private static IHttpClientFactory DefaultHttpClientFactory()
     {

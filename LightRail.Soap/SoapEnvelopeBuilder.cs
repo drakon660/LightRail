@@ -35,6 +35,7 @@ public class SoapEnvelopeBuilder
             _xOperationSchema.NamespaceName));
     }
 
+    //TODO refactor
     public string GetPrefix(string url)
     {
         ReadOnlySpan<char> urlSpan = url.AsSpan();
@@ -55,6 +56,16 @@ public class SoapEnvelopeBuilder
 
         return letters.ToString();
     }
+
+    
+    //TODO refactor
+    public string GetSuffix(string url)
+    {
+        var lastSegment = new Uri(url).Segments.Last().AsSpan();
+
+        return lastSegment.Slice(0, 3).ToString();
+    }
+    
 
     public void BuildHeader(XElement headers = null)
     {
@@ -106,7 +117,7 @@ public class SoapEnvelopeBuilder
         foreach (var namespacesWithPrefix in Namespaces)
         {
             XNamespace additionalNamespace = namespacesWithPrefix;
-            _envelope.Add(new XAttribute(XNamespace.Xmlns + "tns",
+            _envelope.Add(new XAttribute(XNamespace.Xmlns + GetSuffix(additionalNamespace.NamespaceName),
                 additionalNamespace.NamespaceName));
         }
 
