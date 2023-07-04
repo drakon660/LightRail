@@ -43,51 +43,10 @@ public class SoapMessageBuilderTests
 
         envelope.Add(operation);
     }
-
-    [Fact]
-    public void Test_SoapMessageBuildr_Create_Soap_Envelope()
-    {
-        XNamespace tempuri = "http://tempuri.org/";
-        SoapEnvelopeBuilder envelopeBuilder = new();
-        envelopeBuilder.BuildEnvelope(tempuri.ToString(), new Dictionary<string, string>()
-        {
-            { "http://schemas.datacontract.org/2004/07/Interstate.SoapTestService", "tns" }
-        });
-
-        envelopeBuilder.BuildBody("GetValues", new SoapMessage
-        {
-            Input = new Input { Id = 1, Query = "dupa" },
-            //ComplexInput = new ComplexInput(1, new Query(23,23))
-        });
-
-        var envelope = envelopeBuilder.GetEnvelope();
-
-        string expectedSoap = """ 
-                                  
-                                   <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:tns="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService">
-                                  <tem:GetValues>
-                                  <tem:input>
-                                    <tns:Id>1</tns:Id>
-                  
-                                    <tns:Query>dupa</tns:Query>
-                
-                                    </tem:input>
-          
-                                    </tem:GetValues>
     
-                                    </soapenv:Envelope>        
-                                 """;
-
-        string result = RemoveWhitespace(envelope.ToString());
-        expectedSoap = RemoveWhitespace(expectedSoap);
-        result.Should().BeEquivalentTo(expectedSoap);
-        envelope.Should().NotBeNull();
-    }
-
     [Fact]
     public void Test_ReflectionUtils_GetCustomAttribute()
     {
-        //todo dodac rekurencyjne zbieranie attrybutow
         var attributes =
             ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
 
@@ -103,7 +62,7 @@ public class SoapMessageBuilderTests
         var attributes =
             ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
         
-        SoapEnvelopeBuilder2 envelopeBuilder = new(attributes);
+        SoapEnvelopeBuilder envelopeBuilder = new(attributes);
         
         var envelope = envelopeBuilder.GetEnvelope(tempuri.ToString(), "GetValues", new SoapMessage
         {
@@ -138,7 +97,7 @@ public class SoapMessageBuilderTests
     }
 
     [Fact]
-    public void RawXElment_Soap()
+    public void RawXElement_Soap()
     {
         XNamespace SoapSchema = "http://schemas.xmlsoap.org/soap/envelope/";
         

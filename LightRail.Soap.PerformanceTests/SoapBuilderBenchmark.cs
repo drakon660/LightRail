@@ -5,6 +5,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
+using LightRail.Reflection;
 using LightRail.Soap.Contracts;
 
 namespace LightRail.Soap.PerformanceTests;
@@ -12,15 +13,14 @@ namespace LightRail.Soap.PerformanceTests;
 [MemoryDiagnoser]
 public class SoapBuilderBenchmark
 {
-    private SoapEnvelopeBuilder2 _envelopeBuilder;
+    private SoapEnvelopeBuilder _envelopeBuilder;
     private const string SoapSchema = "http://schemas.xmlsoap.org/soap/envelope/";
     [GlobalSetup]
     public void Setup()
     {
-        var attributes = typeof(SoapMessage).GetProperties()
-            .Select(x=>(x.Name, Attribute: x.GetCustomAttribute(typeof(SoapAttributeAttribute))))
-            .ToDictionary((x)=>x.Name, y => (SoapAttributeAttribute)y.Attribute);
-
+        var attributes =
+            ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
+        
         _envelopeBuilder = new(attributes);
     }
 

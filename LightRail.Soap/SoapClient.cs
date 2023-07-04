@@ -11,7 +11,7 @@ public class SoapClient : ISoapClient
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private static SoapEnvelopeBuilder2 _soapEnvelopeBuilder = new (null);
+    private static SoapEnvelopeBuilder _soapEnvelopeBuilder = new (null);
     
     public SoapClient()
         => _httpClientFactory = DefaultHttpClientFactory();

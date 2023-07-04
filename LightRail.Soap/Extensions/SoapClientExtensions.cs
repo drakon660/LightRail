@@ -61,7 +61,7 @@ public static class SoapClientExtensions
 
     public static IServiceCollection AddSoapClient(this IServiceCollection serviceCollection)
     {
-        serviceCollection.AddSingleton<SoapEnvelopeBuilder2>();
+        serviceCollection.AddSingleton<SoapEnvelopeBuilder>();
         
         return serviceCollection;
     }
