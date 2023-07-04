@@ -43,6 +43,54 @@ public class SoapMessageBuilderTests
 
         envelope.Add(operation);
     }
+
+    [Fact]
+    public void Full_XElement()
+    {
+        XNamespace SoapSchema = "http://schemas.xmlsoap.org/soap/envelope/";
+        
+        var ns = XNamespace.Get("http://tempuri.org/");
+        var tem = XNamespace.Get("http://schemas.datacontract.org/2004/07/Interstate.SoapTestService");
+        
+        var envelope = new XElement(SoapSchema + "Envelope", new XAttribute(
+            XNamespace.Xmlns + "soapenv", SoapSchema.NamespaceName));
+
+        envelope.Add(new XAttribute(
+            XNamespace.Xmlns + "tns",
+            ns.NamespaceName));
+        
+        envelope.Add(new XAttribute(
+            XNamespace.Xmlns + "tem",
+            tem.NamespaceName));
+        
+        var methodBody = new XElement(ns.GetName("GetValues"));
+
+        List<XElement> values = new List<XElement>()
+        {
+            new (ns.GetName("input"), new [] 
+            {
+                new XElement(tem.GetName("Id"),1),
+                new XElement(tem.GetName("Query"),"test"),
+            }),
+            new (ns.GetName("complexInput"), new []
+            {
+                new XElement(tem.GetName("Id"),1),
+                new XElement(tem.GetName("Query"), new []
+                {
+                    new XElement(tem.GetName("From"),1),
+                    new XElement(tem.GetName("Size"),12)
+                }),
+            }),
+        };
+        var body = new XElement((XNamespace)SoapSchema + "Body");
+        var header = new XElement((XNamespace)SoapSchema + "Header");
+        methodBody.Add(values);
+        body.Add(methodBody);
+        envelope.Add(header);
+        envelope.Add(body);
+
+        string env = envelope.ToString();
+    }
     
     [Fact]
     public void Test_ReflectionUtils_GetCustomAttribute()
@@ -60,17 +108,20 @@ public class SoapMessageBuilderTests
         
         var attributes =
             ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
-        
-        SoapEnvelopeBuilder envelopeBuilder = new(attributes);
+        var attr = attributes.ToDictionary(x => x.Key, y => (Name:y.Value.AttributeName, y.Value.Namespace));
+        SoapEnvelopeBuilder envelopeBuilder = new(attr);
         
         var envelope = envelopeBuilder.GetEnvelope(tempuri.ToString(), "GetValues", new SoapMessage
         {
             Input = new Input { Id = 1, Query = "dupa" },
-            //ComplexInput = new ComplexInput(1, new Query(23,23))
+            //ComplexInput = new ComplexInput{Id = 1}
         });
 
         string expectedSoap = """                                   
                                    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:Int="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService">
+                                    <soapenv:Header/>
+                                     <soapenv:Body>
+
                                   <tem:GetValues>
                                   <tem:input>
                                     <Int:Id>1</Int:Id>
@@ -80,7 +131,8 @@ public class SoapMessageBuilderTests
                                     </tem:input>
           
                                     </tem:GetValues>
-    
+                                     </soapenv:Body>
+
                                     </soapenv:Envelope>        
                                  """;
 

@@ -11,6 +11,7 @@ using LightRail.Soap.Contracts;
 namespace LightRail.Soap.PerformanceTests;
 
 [MemoryDiagnoser]
+//[Config(typeof(Config))]
 public class SoapBuilderBenchmark
 {
     private SoapEnvelopeBuilder _envelopeBuilder;
@@ -20,8 +21,8 @@ public class SoapBuilderBenchmark
     {
         var attributes =
             ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
-        
-        _envelopeBuilder = new(attributes);
+        var attr = attributes.ToDictionary(x => x.Key, y => (Name:y.Value.AttributeName, y.Value.Namespace));
+        _envelopeBuilder = new(attr);
     }
 
     [Benchmark]
@@ -30,6 +31,7 @@ public class SoapBuilderBenchmark
         XNamespace SoapSchema = "http://schemas.xmlsoap.org/soap/envelope/";
         
         var ns = XNamespace.Get("http://tempuri.org/");
+        var tem = XNamespace.Get("http://schemas.datacontract.org/2004/07/Interstate.SoapTestService");
         
         var envelope = new XElement(SoapSchema + "Envelope", new XAttribute(
             XNamespace.Xmlns + "soapenv", SoapSchema.NamespaceName));
@@ -38,28 +40,35 @@ public class SoapBuilderBenchmark
             XNamespace.Xmlns + "tns",
             ns.NamespaceName));
         
+        envelope.Add(new XAttribute(
+            XNamespace.Xmlns + "tem",
+            tem.NamespaceName));
+        
         var methodBody = new XElement(ns.GetName("GetValues"));
 
         List<XElement> values = new List<XElement>()
         {
             new (ns.GetName("input"), new [] 
             {
-                new XElement("Id",1),
-                new XElement("Query","test"),
+                new XElement(tem.GetName("Id"),1),
+                new XElement(tem.GetName("Query"),"test"),
             }),
             new (ns.GetName("complexInput"), new []
             {
-                new XElement("Id",1),
-                new XElement("Query", new []
+                new XElement(tem.GetName("Id"),1),
+                new XElement(tem.GetName("Query"), new []
                 {
-                    new XElement("From",1),
-                    new XElement("Size",12)
+                    new XElement(tem.GetName("From"),1),
+                    new XElement(tem.GetName("Size"),12)
                 }),
             }),
         };
-        
+        var body = new XElement((XNamespace)SoapSchema + "Body");
+        var header = new XElement((XNamespace)SoapSchema + "Header");
         methodBody.Add(values);
-        envelope.Add(methodBody);
+        body.Add(methodBody);
+        envelope.Add(header);
+        envelope.Add(body);
     }
 
     [Benchmark]

@@ -12,8 +12,13 @@ public class SoapClient : ISoapClient
     public SoapClient(IHttpClientFactory httpClientFactory)
         => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    private static SoapEnvelopeBuilder _soapEnvelopeBuilder = new(null);
+    private readonly SoapEnvelopeBuilder _soapEnvelopeBuilder;
 
+    public SoapClient(SoapEnvelopeBuilder soapEnvelopeBuilder) : this()
+    {
+        _soapEnvelopeBuilder = soapEnvelopeBuilder;
+    }
+    
     public SoapClient()
         => _httpClientFactory = DefaultHttpClientFactory();
 
@@ -38,6 +43,35 @@ public class SoapClient : ISoapClient
 
         var content = soapFactory.Create(headers, bodies, action);
 
+       
+        
+        // Execute call
+        var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
+        var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
+
+        //result builder
+        return response;
+    }
+    
+    public async Task<HttpResponseMessage> PostAsync(
+        Uri endpoint,
+        SoapVersion soapVersion,
+        XElement envelope,
+        string action = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (endpoint == null)
+            throw new ArgumentNullException(nameof(endpoint));
+
+        if (envelope == null)
+            throw new ArgumentNullException(nameof(envelope));
+        
+        ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion);
+
+        var content = soapFactory.Create(envelope, action);
+
+        var content1 = await content.ReadAsStringAsync();
+        
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
         var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
@@ -81,14 +115,13 @@ public class SoapClient : ISoapClient
         T message,
         string operationName,
         string action = null,
-        CancellationToken cancellationToken = default) where T : ISoapMessage
+        CancellationToken cancellationToken = default) where T : class
     {
         XNamespace tempuri = "http://tempuri.org/";
 
         var envelope = _soapEnvelopeBuilder.GetEnvelope(tempuri, operationName, message);
 
-        return await PostAsync(endpoint: endpoint, soapVersion: soapVersion, action: action,
-            cancellationToken: cancellationToken, bodies: new [] { envelope });
+        return await PostAsync(endpoint ,SoapVersion.Soap11, envelope, action, cancellationToken);
     }
 
     private static IHttpClientFactory DefaultHttpClientFactory()

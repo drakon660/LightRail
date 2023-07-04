@@ -8,31 +8,18 @@ namespace LightRail.Soap;
 
 public class SoapEnvelopeBuilder
 {
-    private readonly IReadOnlyDictionary<string, SoapAttributeAttribute> _soapAttributes;
+    private readonly IReadOnlyDictionary<string, (string Name,string Namespace)> _soapAttributes;
     private const string SoapSchema = "http://schemas.xmlsoap.org/soap/envelope/";
     private static XNamespace XSoapSchema => SoapSchema;
     private XNamespace _xOperationSchema;
 
-    private HashSet<string> Namespaces =>
-        _soapAttributes?.Where(x =>x.Value.Namespace != null).Select(x => x.Value.Namespace).ToHashSet();
+    private HashSet<string> Namespaces => _soapAttributes.Where(x => x.Value.Namespace != null).Select(x=>x.Value.Namespace).ToHashSet();
 
-    private XElement _envelope;
+    private XElement _body;
 
-    public SoapEnvelopeBuilder(IReadOnlyDictionary<string, SoapAttributeAttribute> soapAttributes)
+    public SoapEnvelopeBuilder(IReadOnlyDictionary<string, (string Name, string Namespace)> soapAttributes)
     {
         _soapAttributes = soapAttributes;
-    }
-
-    public void BuildEnvelope(XNamespace operationSchema)
-    {
-        _xOperationSchema = operationSchema;
-
-        _envelope = new XElement(XSoapSchema + "Envelope", new XAttribute(
-            XNamespace.Xmlns + "soapenv", XSoapSchema.NamespaceName));
-        
-        _envelope.Add(new XAttribute(
-            XNamespace.Xmlns + GetPrefix(operationSchema.NamespaceName),
-            _xOperationSchema.NamespaceName));
     }
 
     //TODO refactor
@@ -56,20 +43,22 @@ public class SoapEnvelopeBuilder
 
         return letters.ToString();
     }
-
     
     //TODO refactor
     public string GetSuffix(string url)
     {
-        var lastSegment = new Uri(url).Segments.Last().AsSpan();
+        //todo last segment is empty /  in tempuri
+        var segments  = new Uri(url).Segments;
 
-        return lastSegment.Slice(0, 3).ToString();
-    }
-    
-
-    public void BuildHeader(XElement headers = null)
-    {
-        throw new NotImplementedException("not needed right now");
+        if (segments.Length == 1)
+        {
+            return GetPrefix(url);
+        }
+        else
+        {
+            var lastSegment = segments.Last();
+            return lastSegment.AsSpan().Slice(0, 3).ToString();  
+        }
     }
 
     protected XElement BuildBody<TSoapMessage>(string operationName, TSoapMessage message)
@@ -89,13 +78,9 @@ public class SoapEnvelopeBuilder
             string name = member.Name;
 
             string key = $"{typeof(TSoapMessage).DeclaringType}_{name}";
-            
-            if (_soapAttributes.TryGetValue(key, out var soapAttribute))
-            {
-                name = !string.IsNullOrEmpty(soapAttribute.AttributeName)
-                    ? soapAttribute.AttributeName
-                    : member.Name;
-            }
+
+            if (_soapAttributes.TryGetValue(key, out var nameOrNamespace))
+                name = nameOrNamespace.Name;
 
             var element = GetValue(name, member.Type, value, _xOperationSchema);
 
@@ -110,20 +95,31 @@ public class SoapEnvelopeBuilder
 
     public XElement GetEnvelope<TSoapMessage>(XNamespace operationSchema, string operationName, TSoapMessage message)
     {
-        BuildEnvelope(operationSchema);
+        _xOperationSchema = operationSchema;
+
+        _body = new XElement((XNamespace)SoapSchema + "Body");
 
         XElement operation = BuildBody(operationName, message);
 
-        foreach (var namespacesWithPrefix in Namespaces)
-        {
-            XNamespace additionalNamespace = namespacesWithPrefix;
-            _envelope.Add(new XAttribute(XNamespace.Xmlns + GetSuffix(additionalNamespace.NamespaceName),
-                additionalNamespace.NamespaceName));
-        }
+        var envelope = new XElement(XSoapSchema + "Envelope", new XAttribute(
+            XNamespace.Xmlns + "soapenv", XSoapSchema.NamespaceName));
+        
+        // envelope.Add(new XAttribute(XNamespace.Xmlns + GetSuffix(_xOperationSchema.NamespaceName),
+        //     _xOperationSchema.NamespaceName));
+        //
+        // foreach (var namespacesWithPrefix in Namespaces)
+        // {
+        //     XNamespace additionalNamespace = namespacesWithPrefix;
+        //     envelope.Add(new XAttribute(XNamespace.Xmlns + GetSuffix(additionalNamespace.NamespaceName),
+        //         additionalNamespace.NamespaceName));
+        // }
+        
+        _body.Add(operation);
 
-        _envelope.Add(operation);
+        envelope.Add(new XElement((XNamespace)SoapSchema + "Header"));
+        envelope.Add(_body);
 
-        return _envelope;
+        return envelope;
     }
 
     public XElement GetValue(string name, Type type, object obj, XNamespace ns = null)
@@ -145,17 +141,11 @@ public class SoapEnvelopeBuilder
             var childName = member.Name;
 
             string key = $"{type}_{member.Name}";
-
+            
             XNamespace xNamespace = null;
             
-            if (_soapAttributes.TryGetValue(key, out var soapAttribute))
-            {
-                childName = !string.IsNullOrEmpty(soapAttribute.AttributeName)
-                    ? soapAttribute.AttributeName
-                    : member.Name;
-            
-                xNamespace = soapAttribute.Namespace;
-            }
+            // if (_soapAttributes.TryGetValue(key, out var nameOrNamespace))
+            //     xNamespace = nameOrNamespace.Namespace;
 
             var childElement = GetValue(childName, member.Type, accessor[obj, member.Name],
                 xNamespace);

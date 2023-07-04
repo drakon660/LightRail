@@ -27,3 +27,23 @@ public record ComplexInput
 };
 
 public record Query(int From, int Size);
+
+
+public record DifferentSoapMessage
+{
+    [SoapAttribute(AttributeName = "input")]
+    public Different Input { get; set; }
+}
+
+public record Different
+{
+    [SoapAttribute(Namespace = "http://schemas.datacontract.org/2004/07/Differstate.Different")]
+    public Item Item { get; set; }
+}
+
+[System.Runtime.Serialization.DataContract]
+public class Item
+{
+    [SoapAttribute(Namespace = "http://schemas.datacontract.org/2004/07/Differstate.Different")]
+    public string Value { get; set; }
+}
