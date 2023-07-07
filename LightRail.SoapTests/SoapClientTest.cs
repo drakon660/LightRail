@@ -1,8 +1,6 @@
 using System.Net;
-using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using FluentAssertions;
 using LightRail.Reflection;
 using LightRail.Soap;
 using LightRail.Soap.Contracts;
@@ -11,10 +9,12 @@ namespace LightRail.SoapTests;
 
 public class SoapClientTest
 {
+    private const string NS = "http://tempuri.org/";
+    
     [Fact]
     public async Task Check_If_Instance_Is_Created_Properly_With_GetNothing()
     {
-        var soapClient = new SoapClient();
+        var soapClient = new SoapClient("https://lightrail-2.azurewebsites.net/nothing.svc", NS);
         var ns = XNamespace.Get("http://tempuri.org/");
 
         var actual =
@@ -30,7 +30,7 @@ public class SoapClientTest
     [Fact]
     public async Task Check_If_Instance_Is_Created_Properly_With_GetNothingWithSimpleInput()
     {
-        var soapClient = new SoapClient();
+        var soapClient = new SoapClient(NS);
         var ns = XNamespace.Get("http://tempuri.org/");
 
         var methodBody = new XElement(ns.GetName("GetNothingWithSimpleInput"));
@@ -56,7 +56,7 @@ public class SoapClientTest
     [Fact]
     public async Task Check_SoapClient_PostAsync_With_Raw_Data()
     {
-        var soapClient = new SoapClient();
+        var soapClient = new SoapClient("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc", NS);
 
         string bodies = """
                                        <tem:GetValues>
@@ -110,7 +110,7 @@ public class SoapClientTest
             Input = new () { Item = new Item { Value = "222"} },
         };
 
-        SoapClient soapClient = new SoapClient(envelopeBuilder);
+        SoapClient soapClient = new SoapClient(NS);
 
         HttpResponseMessage? actual =
             await soapClient.PostAsync(new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),

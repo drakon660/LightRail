@@ -2,26 +2,60 @@ using System.Net;
 using System.Xml.Linq;
 using Ardalis.Result;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace LightRail.Soap;
 
 public class SoapClient : ISoapClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
-
-    public SoapClient(IHttpClientFactory httpClientFactory)
-        => _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-
     private readonly SoapEnvelopeBuilder _soapEnvelopeBuilder;
 
-    public SoapClient(SoapEnvelopeBuilder soapEnvelopeBuilder) : this()
+    private readonly XNamespace _namespace;
+    private readonly Uri _endpoint;
+    
+    
+    public SoapClient(string @namespace)
     {
-        _soapEnvelopeBuilder = soapEnvelopeBuilder;
+        _namespace = @namespace;
+
+        _httpClientFactory = DefaultHttpClientFactory();
     }
     
-    public SoapClient()
-        => _httpClientFactory = DefaultHttpClientFactory();
+    public SoapClient(string @namespace, string endpoint)
+    {
+        _namespace = @namespace;
+        _endpoint = new Uri(endpoint);
 
+        _httpClientFactory = DefaultHttpClientFactory();
+    }
+    
+    public SoapClient(string @namespace, string endpoint, IHttpClientFactory httpClientFactory)
+    {
+        _namespace = @namespace;
+        _endpoint = new Uri(endpoint);
+        
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    }
+    
+    public SoapClient(string @namespace, string endpoint, SoapEnvelopeBuilder soapEnvelopeBuilder, IHttpClientFactory httpClientFactory)
+    {
+        _namespace = @namespace;
+        _endpoint = new Uri(endpoint);
+        
+        _soapEnvelopeBuilder = soapEnvelopeBuilder ?? throw new ArgumentNullException(nameof(soapEnvelopeBuilder));
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    }
+    
+    public SoapClient(IOptions<SoapClientOptions> options, SoapEnvelopeBuilder soapEnvelopeBuilder, IHttpClientFactory httpClientFactory)
+    {
+        _namespace = options.Value.Namespace;
+        _endpoint = new Uri(options.Value.Endpoint);
+        
+        _soapEnvelopeBuilder = soapEnvelopeBuilder ?? throw new ArgumentNullException(nameof(soapEnvelopeBuilder));
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    }
+    
     public async Task<HttpResponseMessage> PostAsync(
         Uri endpoint,
         SoapVersion soapVersion,
@@ -43,8 +77,6 @@ public class SoapClient : ISoapClient
 
         var content = soapFactory.Create(headers, bodies, action);
 
-       
-        
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
         var response = await httpClient.PostAsync(endpoint, content, cancellationToken);
@@ -52,10 +84,17 @@ public class SoapClient : ISoapClient
         //result builder
         return response;
     }
-    
+
+    public async Task<HttpResponseMessage> PostAsync<TSoapMessage>(TSoapMessage soapMessage, string operationName, string action = null,
+        CancellationToken cancellationToken = default)
+    {
+        var envelope = _soapEnvelopeBuilder.GetEnvelope(_namespace, operationName, soapMessage);
+
+        return await PostAsync(_endpoint, envelope, action, cancellationToken);
+    }
+
     public async Task<HttpResponseMessage> PostAsync(
         Uri endpoint,
-        SoapVersion soapVersion,
         XElement envelope,
         string action = null,
         CancellationToken cancellationToken = default)
@@ -66,7 +105,7 @@ public class SoapClient : ISoapClient
         if (envelope == null)
             throw new ArgumentNullException(nameof(envelope));
         
-        ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion);
+        ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion:SoapVersion.Soap11);
 
         var content = soapFactory.Create(envelope, action);
 
@@ -121,10 +160,10 @@ public class SoapClient : ISoapClient
 
         var envelope = _soapEnvelopeBuilder.GetEnvelope(tempuri, operationName, message);
 
-        return await PostAsync(endpoint ,SoapVersion.Soap11, envelope, action, cancellationToken);
+        return await PostAsync(endpoint, envelope, action, cancellationToken);
     }
 
-    private static IHttpClientFactory DefaultHttpClientFactory()
+    public static IHttpClientFactory DefaultHttpClientFactory()
     {
         var serviceProvider = new ServiceCollection();
 

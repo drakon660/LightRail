@@ -1,8 +1,7 @@
+using System.Collections;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 using FastMember;
 using LightRail.Reflection;
-using Member = FastMember.Member;
 
 namespace LightRail.Soap;
 
@@ -55,7 +54,7 @@ public class SoapEnvelopeBuilder
         {
             return GetPrefix(url);
         }
-        
+
         var lastSegment = segments.Last();
         return lastSegment.AsSpan().Slice(0, 3).ToString().ToLower();
     }
@@ -80,9 +79,9 @@ public class SoapEnvelopeBuilder
             // Span<char> charSpan = charArray;
             // charSpan[0] = char.ToLower(charSpan[0]);
             // name = new string(charArray);
-            
+
             string key = $"{typeof(TSoapMessage)}_{name}";
-            
+
             if (_soapAttributes.TryGetValue(key, out var nameOrNamespace))
                 name = nameOrNamespace.Name;
 
@@ -108,7 +107,7 @@ public class SoapEnvelopeBuilder
 
         envelope.Add(new XAttribute(XNamespace.Xmlns + GetSuffix(_xOperationSchema.NamespaceName),
             _xOperationSchema.NamespaceName));
-        
+
         foreach (var namespacesWithPrefix in Namespaces)
         {
             XNamespace additionalNamespace = namespacesWithPrefix;

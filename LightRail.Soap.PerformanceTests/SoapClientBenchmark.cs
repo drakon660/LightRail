@@ -1,5 +1,5 @@
+using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
@@ -21,11 +21,13 @@ public class SoapClientBenchmark
     public void Setup()
     {
         _wcfClient = LightRail.WcfClient.NothingInputServiceFactory.Create(WcfServiceUrl);
-        _soapClient = new SoapClient();
-        _soapClient2 = new SoapClient();
+        
+        var ns = "http://tempuri.org/";
+        
+        _soapClient = new SoapClient(ns,WcfServiceUrl);
+        _soapClient2 = new SoapClient(ns,WcfServiceUrl);
     }
-
-   
+    
     // [Benchmark]
     // public void WcfClientFactory()
     // {
@@ -129,7 +131,7 @@ public class SoapClientBenchmark
     //[Benchmark]
     public async Task WcfClient()
     {
-        await _wcfClient.GetValuesAsync(new LightRail.WcfClient.Input(){Id = 15, Query = "Sample Query"}, new LightRail.WcfClient.ComplexInput()
+        await _wcfClient.GetValuesAsync(new LightRail.WcfClient.Input(){ Id = 15, Query = "Sample Query" }, new LightRail.WcfClient.ComplexInput()
         {
             Id = 25,
             Query = new LightRail.WcfClient.ComplexQuery()
