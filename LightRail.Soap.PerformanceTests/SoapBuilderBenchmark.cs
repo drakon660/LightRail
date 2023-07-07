@@ -16,6 +16,7 @@ public class SoapBuilderBenchmark
 {
     private SoapEnvelopeBuilder _envelopeBuilder;
     private const string SoapSchema = "http://schemas.xmlsoap.org/soap/envelope/";
+    XNamespace _tempuri = "http://tempuri.org/";
     [GlobalSetup]
     public void Setup()
     {
@@ -56,11 +57,11 @@ public class SoapBuilderBenchmark
             new (ns.GetName("complexInput"), new []
             {
                 new XElement(tem.GetName("Id"),1),
-                new XElement(tem.GetName("Query"), new []
-                {
-                    new XElement(tem.GetName("From"),1),
-                    new XElement(tem.GetName("Size"),12)
-                }),
+                // new XElement(tem.GetName("Query"), new []
+                // {
+                //     new XElement(tem.GetName("From"),1),
+                //     new XElement(tem.GetName("Size"),12)
+                // }),
             }),
         };
         var body = new XElement((XNamespace)SoapSchema + "Body");
@@ -74,13 +75,12 @@ public class SoapBuilderBenchmark
     [Benchmark]
     public void SoapBuilder()
     {
-        XNamespace tempuri = "http://tempuri.org/";
-        
-        var envelope = _envelopeBuilder.GetEnvelope(tempuri, "GetValues", new SoapMessage
+        var envelope = _envelopeBuilder.GetEnvelope(_tempuri, "GetValues", new SoapMessage
         {
             Input = new Input { Id = 1, Query = "dupa" },
-            ComplexInput = new ComplexInput{ Id= 1}
+            ComplexInput = new ComplexInput { Id = 1 }
         });
+
     }
     
     private class Config : ManualConfig

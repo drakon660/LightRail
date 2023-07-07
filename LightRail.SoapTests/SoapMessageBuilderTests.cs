@@ -104,32 +104,24 @@ public class SoapMessageBuilderTests
     [Fact]
     public void Test_SoapMessageBuildr_Create_Soap_Envelope_Better()
     {
-        XNamespace tempuri = "http://tempuri.org/";
+        var envelope= Common.ProduceSoap();
         
-        var attributes =
-            ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(typeof(Soap.Contracts.SoapMessage));
-        var attr = attributes.ToDictionary(x => x.Key, y => (Name:y.Value.AttributeName, y.Value.Namespace));
-        SoapEnvelopeBuilder envelopeBuilder = new(attr);
-        
-        var envelope = envelopeBuilder.GetEnvelope(tempuri.ToString(), "GetValues", new SoapMessage
-        {
-            Input = new Input { Id = 1, Query = "dupa" },
-            //ComplexInput = new ComplexInput{Id = 1}
-        });
-
         string expectedSoap = """                                   
                                    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:Int="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService">
                                     <soapenv:Header/>
                                      <soapenv:Body>
 
                                   <tem:GetValues>
+                                  <tem:complexInput>
+                                    <Int:Id>1</Int:Id>
+                                    </tem:complexInput>
                                   <tem:input>
                                     <Int:Id>1</Int:Id>
                   
                                     <Int:Query>dupa</Int:Query>
                 
                                     </tem:input>
-          
+                       
                                     </tem:GetValues>
                                      </soapenv:Body>
 

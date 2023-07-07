@@ -1,26 +1,35 @@
-POST https://lightrail-2.azurewebsites.net/nothing.svc
+POST http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc
 Content-Type: text/xml
-SOAPAction: http://tempuri.org/INothingService/GetNothingValues
+SOAPAction: http://tempuri.org/INothingInputService/GetValues
 
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" 
-                  xmlns:tns="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService">
-
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:int="http://schemas.datacontract.org/2004/07/Interstate.SoapTestService" xmlns:int1="http://schemas.datacontract.org/2004/07/Interstate.Soap.Different">
+    <soapenv:Header/>
     <soapenv:Body>
-
-        <tem:GetNothingValues>
-
-            <tem:input>
-
-                <tns:Id>12</tns:Id>
-
-                <tns:Query>dupa</tns:Query>
-
-            </tem:input>
-
-            <tem:Value1>12</tem:Value1>
-
-        </tem:GetNothingValues>
-
+        <tem:GetValues>
+            <!--Optional:-->
+            <tem:Input>
+                <!--Optional:-->
+                <int:Id>1</int:Id>
+                <!--Optional:-->
+                <int:Query>1</int:Query>
+            </tem:Input>
+            <!--Optional:-->
+            <tem:ComplexInput>
+                <!--Optional:-->
+                <int:Id>1</int:Id>
+                <!--Optional:-->
+                <int:Query>
+                    <!--Optional:-->
+                    <int:From>
+                        <!--Optional:-->
+                        <int1:A>1</int1:A>
+                        <!--Optional:-->
+                        <int1:B>2</int1:B>
+                    </int:From>
+                    <!--Optional:-->
+                    <int:Size>3</int:Size>
+                </int:Query>
+            </tem:ComplexInput>
+        </tem:GetValues>
     </soapenv:Body>
-
 </soapenv:Envelope>

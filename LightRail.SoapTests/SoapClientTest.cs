@@ -107,7 +107,7 @@ public class SoapClientTest
         
         DifferentSoapMessage soapMessage = new DifferentSoapMessage()
         {
-            Input = new () { Item = new Item{ Value = "222"} },
+            Input = new () { Item = new Item { Value = "222"} },
         };
 
         SoapClient soapClient = new SoapClient(envelopeBuilder);
@@ -115,8 +115,7 @@ public class SoapClientTest
         HttpResponseMessage? actual =
             await soapClient.PostAsync(new Uri("http://localhost:8667/sample-45830D75-D6F6-420F-B22F-D721E354C6A5.svc"),
                 SoapVersion.Soap11, soapMessage, "Shoot", "http://tempuri.org/IDifferentService/Shoot");
-
-
+        
         string value = await actual.Content.ReadAsStringAsync();
     }
 }
