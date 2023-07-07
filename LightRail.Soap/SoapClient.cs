@@ -14,7 +14,6 @@ public class SoapClient : ISoapClient
     private readonly XNamespace _namespace;
     private readonly Uri _endpoint;
     
-    
     public SoapClient(string @namespace)
     {
         _namespace = @namespace;
@@ -108,8 +107,6 @@ public class SoapClient : ISoapClient
         ISoapEnvelopeFactory soapFactory = EnvelopeFactories.Get(soapVersion:SoapVersion.Soap11);
 
         var content = soapFactory.Create(envelope, action);
-
-        var content1 = await content.ReadAsStringAsync();
         
         // Execute call
         var httpClient = _httpClientFactory.CreateClient(nameof(SoapClient));
@@ -170,7 +167,7 @@ public class SoapClient : ISoapClient
         serviceProvider
             .AddHttpClient(nameof(SoapClient))
             .ConfigurePrimaryHttpMessageHandler(e =>
-                new HttpClientHandler
+                new SocketsHttpHandler()
                 {
                     AllowAutoRedirect = true,
                     AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip

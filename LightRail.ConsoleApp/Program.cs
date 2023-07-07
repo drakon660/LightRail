@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/
 // new-console-template for more information
 
+using System.Reflection;
 using LightRail.Soap;
 using LightRail.Soap.Contracts;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +15,7 @@ IConfiguration configuration = new ConfigurationBuilder()
 
 var services = new ServiceCollection();
 
-services.AddSoapClient(configuration,"SoapClient-1");
+services.AddSoapClient(configuration,"SoapClient-1", assemblies: Assembly.GetAssembly(typeof(SoapMessage)));
 
 var provider = services.BuildServiceProvider();
 

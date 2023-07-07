@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 using System.Xml.Linq;
+using System.Xml.Serialization;
+using LightRail.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -64,6 +66,13 @@ public static class SoapClientExtensions
     public static IServiceCollection AddSoapClient(this IServiceCollection serviceCollection,
         IConfiguration configurationSection, string name,  params Assembly[] assemblies)
     {
+        var types = assemblies.SelectMany(x=>x.DefinedTypes);
+
+        foreach (var type in types.Where(x=>x.IsClass))
+        {
+            var dictionary = ReflectionUtils.GetCustomAttributes<SoapAttributeAttribute>(type);
+        }
+        
         serviceCollection.Configure<SoapClientOptions>(_=> configurationSection.GetSection("SoapClients"));
         serviceCollection.AddHttpClient(name, httpClient => { });
         
