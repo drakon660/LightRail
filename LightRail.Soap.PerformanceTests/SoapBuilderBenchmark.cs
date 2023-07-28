@@ -11,6 +11,7 @@ using LightRail.Soap.Contracts;
 namespace LightRail.Soap.PerformanceTests;
 
 [MemoryDiagnoser]
+[SimpleJob(RuntimeMoniker.Net60)]
 //[Config(typeof(Config))]
 public class SoapBuilderBenchmark
 {
