@@ -1,27 +1,41 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
 trigger:
 - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'windows-latest'
 
-variables:  
+variables:
+  solution: '**/Interstate.SoapTestService.Azure.csproj'
+  buildPlatform: 'AnyCPU'
   buildConfiguration: 'Release'
 
-# steps:  
-# - task: DotNetCoreCLI@2
-#   inputs:
-#     command: 'build'
-#     arguments: '--configuration $(buildConfiguration)'
-#   displayName: 'dotnet build $(buildConfiguration)'
-
 steps:
-  - task: Cache@2  # Not required, but Qodana will open projects with cache faster.
-    inputs:
-      key: '"$(Build.Repository.Name)" | "$(Build.SourceBranchName)" | "$(Build.SourceVersion)"'
-      path: '$(Agent.TempDirectory)/qodana/cache'
-      restoreKeys: |
-        "$(Build.Repository.Name)" | "$(Build.SourceBranchName)"
-        "$(Build.Repository.Name)"
-  - task: QodanaScan@2023
-    env:
-      QODANA_TOKEN: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb24iOiJ6RURZaiIsInByb2plY3QiOiJBbERLaiIsInRva2VuIjoiekVxOGUifQ.i0X68z2kHRxaxZzZboi06jzdc4OpBnvI8WMIJVhzn_M'
+- task: VSBuild@1  
+  inputs:
+    solution: '$(solution)'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'    
+    msbuildArgs: '/t:restore'     
+- task: VSBuild@1  
+  inputs:
+    solution: '$(solution)'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'    
+    msbuildArgs: '/p:DeployOnBuild=true /p:SkipInvalidConfigurations=true /p:OutputPath="$(Build.ArtifactStagingDirectory)"'  
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+
+  
+
+
+
+
